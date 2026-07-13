@@ -23,7 +23,7 @@ export function PolicyFlowNode({ data, selected }: NodeProps<PolicyFlowNodeType>
       className={`flow-node${selected ? ' is-selected' : ''}`}
       style={{ '--node-color': data.color } as CSSProperties}
     >
-      {!data.isRoot && <Handle type="target" position={Position.Top} className="flow-handle" />}
+      {!data.isRoot && <Handle type="target" position={Position.Left} className="flow-handle" />}
       <span className="flow-node-glyph" aria-hidden="true">
         <TypeIcon size={15} />
       </span>
@@ -31,7 +31,7 @@ export function PolicyFlowNode({ data, selected }: NodeProps<PolicyFlowNodeType>
         <span className="flow-node-title">{data.title}</span>
         {data.subtitle && <span className="flow-node-sub mono">{data.subtitle}</span>}
       </span>
-      {data.hasChildren && <Handle type="source" position={Position.Bottom} className="flow-handle" />}
+      {data.hasChildren && <Handle type="source" position={Position.Right} className="flow-handle" />}
     </div>
   )
 }

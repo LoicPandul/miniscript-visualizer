@@ -16,13 +16,6 @@ import { parsePolicy } from '../core/parse'
 import type { PolicyIssue } from '../core/validate'
 import type { CompileResult } from '../lib/compiler'
 
-export interface Annotation {
-  id: string
-  text: string
-  x: number
-  y: number
-}
-
 export interface CompileState {
   status: 'loading' | 'ready' | 'error'
   result: CompileResult | null
@@ -35,7 +28,6 @@ interface VisualizerState {
   nextColorIndex: number
   context: ScriptContext
   selectedNodeId: string | null
-  annotations: Annotation[]
   positionOverrides: Record<string, { x: number; y: number }>
   compile: CompileState
 
@@ -60,9 +52,6 @@ interface VisualizerState {
   importPolicy: (policy: string) => void
   resetPolicy: () => void
 
-  addAnnotation: (x: number, y: number) => string
-  updateAnnotation: (id: string, patch: Partial<Omit<Annotation, 'id'>>) => void
-  removeAnnotation: (id: string) => void
   setNodePosition: (id: string, x: number, y: number) => void
   resetLayout: () => void
 }
@@ -126,12 +115,10 @@ export const useStore = create<VisualizerState>()(
         for (const [id, pos] of Object.entries(s.positionOverrides)) {
           if (alive.has(id)) overrides[id] = pos
         }
-        const keepSelection =
-          s.selectedNodeId !== null &&
-          (alive.has(s.selectedNodeId) || s.annotations.some((a) => a.id === s.selectedNodeId))
         return {
           positionOverrides: overrides,
-          selectedNodeId: keepSelection ? s.selectedNodeId : null,
+          selectedNodeId:
+            s.selectedNodeId !== null && alive.has(s.selectedNodeId) ? s.selectedNodeId : null,
         }
       }
 
@@ -143,7 +130,6 @@ export const useStore = create<VisualizerState>()(
         nextColorIndex: start.keys.length,
         context: 'p2wsh',
         selectedNodeId: null,
-        annotations: [],
         positionOverrides: {},
         compile: { status: 'loading', result: null, issues: [] },
 
@@ -229,7 +215,6 @@ export const useStore = create<VisualizerState>()(
             keys,
             nextColorIndex: keys.length,
             selectedNodeId: null,
-            annotations: [],
             positionOverrides: {},
           })
         },
@@ -241,7 +226,6 @@ export const useStore = create<VisualizerState>()(
             keys,
             nextColorIndex: keys.length,
             selectedNodeId: null,
-            annotations: [],
             positionOverrides: {},
           })
         },
@@ -253,26 +237,9 @@ export const useStore = create<VisualizerState>()(
             keys: [participant],
             nextColorIndex: 1,
             selectedNodeId: null,
-            annotations: [],
             positionOverrides: {},
           })
         },
-
-        addAnnotation: (x, y) => {
-          const id = nextId('a')
-          set((s) => ({
-            annotations: [...s.annotations, { id, text: '', x, y }],
-          }))
-          return id
-        },
-
-        updateAnnotation: (id, patch) =>
-          set((s) => ({
-            annotations: s.annotations.map((a) => (a.id === id ? { ...a, ...patch } : a)),
-          })),
-
-        removeAnnotation: (id) =>
-          set((s) => ({ annotations: s.annotations.filter((a) => a.id !== id) })),
 
         setNodePosition: (id, x, y) =>
           set((s) => ({ positionOverrides: { ...s.positionOverrides, [id]: { x, y } } })),
@@ -282,13 +249,12 @@ export const useStore = create<VisualizerState>()(
     },
     {
       name: 'miniscript-visualizer',
-      version: 1,
+      version: 2,
       partialize: (s) => ({
         root: s.root,
         keys: s.keys,
         nextColorIndex: s.nextColorIndex,
         context: s.context,
-        annotations: s.annotations,
         positionOverrides: s.positionOverrides,
       }),
     },

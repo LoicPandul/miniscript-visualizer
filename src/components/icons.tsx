@@ -34,16 +34,17 @@ export const IconKey = (p: IconProps) => (
   </Icon>
 )
 
+/** Logical conjunction wedge (∧). */
 export const IconAnd = (p: IconProps) => (
   <Icon {...p}>
-    <path d="M5 19 12 5l7 14" />
-    <path d="M8.2 13.5h7.6" />
+    <path d="M5 18 12 6l7 12" />
   </Icon>
 )
 
+/** Logical disjunction vee (∨). */
 export const IconOr = (p: IconProps) => (
   <Icon {...p}>
-    <path d="M5 5l7 14L19 5" />
+    <path d="M5 6l7 12L19 6" />
   </Icon>
 )
 

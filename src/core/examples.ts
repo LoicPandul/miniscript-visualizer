@@ -51,8 +51,6 @@ class ExampleBuilder {
   }
 }
 
-const H_EXAMPLE = '6c60f404f8167a38fc70eaf8aa17ac351023bef86bcb9d1086a19afe95bd5333'
-
 export const EXAMPLES: PolicyExample[] = [
   {
     id: 'single-key',
@@ -74,6 +72,23 @@ export const EXAMPLES: PolicyExample[] = [
     },
   },
   {
+    id: 'multisig-3of5',
+    name: '3-of-5 multisig',
+    description: 'Any 3 signatures out of 5 keys can spend.',
+    build: () => {
+      const b = new ExampleBuilder()
+      const root = b.thresh(
+        3,
+        b.key('Alice'),
+        b.key('Bob'),
+        b.key('Carol'),
+        b.key('Dave'),
+        b.key('Erin'),
+      )
+      return { root, keys: b.keys }
+    },
+  },
+  {
     id: 'inheritance',
     name: 'Inheritance',
     description: 'The owner spends anytime; an heir can recover the coins after ~6 months of inactivity.',
@@ -88,9 +103,24 @@ export const EXAMPLES: PolicyExample[] = [
     },
   },
   {
+    id: 'multisig-recovery',
+    name: 'Multisig + recovery key',
+    description: '2-of-3 for day-to-day spending; a single recovery key unlocks after ~1 year.',
+    build: () => {
+      const b = new ExampleBuilder()
+      const root = b.orWeighted(
+        [9, 1],
+        b.thresh(2, b.key('Alice'), b.key('Bob'), b.key('Carol')),
+        b.and(b.key('Recovery'), b.older(52_560)),
+      )
+      return { root, keys: b.keys }
+    },
+  },
+  {
     id: 'decaying-multisig',
     name: 'Decaying multisig',
-    description: '3-of-3 today, but after ~3 months only 2-of-3 is required.',
+    description:
+      'A 4-way threshold where the timelock counts as one condition: all 3 keys are needed at first, then only 2-of-3 once ~3 months have passed.',
     build: () => {
       const b = new ExampleBuilder()
       const root = b.thresh(
@@ -99,19 +129,6 @@ export const EXAMPLES: PolicyExample[] = [
         b.key('Bob'),
         b.key('Carol'),
         b.older(12_960),
-      )
-      return { root, keys: b.keys }
-    },
-  },
-  {
-    id: 'htlc',
-    name: 'Hash time-locked contract',
-    description: 'The receiver claims with a secret preimage; the sender takes the coins back after a deadline.',
-    build: () => {
-      const b = new ExampleBuilder()
-      const root = b.or(
-        b.and(b.key('Receiver'), b.hash('sha256', H_EXAMPLE)),
-        b.and(b.key('Sender'), b.after(900_000)),
       )
       return { root, keys: b.keys }
     },

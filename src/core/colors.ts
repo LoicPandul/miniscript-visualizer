@@ -5,13 +5,13 @@ import type { NodeType } from './policy'
  * builder, the diagram and the colorized code output.
  */
 export const TYPE_COLORS: Record<NodeType, string> = {
-  key: '#f7c948',
-  and: '#5b9dff',
-  or: '#f06fb7',
-  thresh: '#a88bfa',
-  after: '#3ecf8e',
-  older: '#35c7d6',
-  hash: '#ff9a3e',
+  key: '#a87908',
+  and: '#2563eb',
+  or: '#db2777',
+  thresh: '#7c3aed',
+  after: '#059669',
+  older: '#0891b2',
+  hash: '#d97706',
 }
 
 export const TYPE_LABELS: Record<NodeType, string> = {
@@ -30,14 +30,14 @@ export const TYPE_LABELS: Record<NodeType, string> = {
  * are always labeled with their alias.
  */
 export const PARTICIPANT_COLORS = [
-  '#f7c948', // gold
-  '#ff7e67', // coral
-  '#6bc5ff', // sky
-  '#a8db3f', // lime
-  '#d293ff', // orchid
-  '#ff93c9', // rose
-  '#4fd8c4', // teal
-  '#d9b991', // sand
+  '#a87908', // gold
+  '#dc4b28', // coral
+  '#0284c7', // sky
+  '#65a30d', // lime
+  '#9333ea', // orchid
+  '#be3d78', // rose
+  '#0d9488', // teal
+  '#92703a', // sand
 ]
 
 export function participantColor(colorIndex: number): string {

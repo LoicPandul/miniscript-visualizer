@@ -1,11 +1,8 @@
 import {
   applyNodeChanges,
-  Background,
-  BackgroundVariant,
   Controls,
   getNodesBounds,
   getViewportForBounds,
-  MiniMap,
   Panel,
   ReactFlow,
   ReactFlowProvider,
@@ -22,11 +19,10 @@ import { countNodes, isBranch, LOCKTIME_THRESHOLD, walk } from '../../core/polic
 import { approxDuration, olderMode, olderUnits } from '../../core/timelocks'
 import { layoutTree } from '../../lib/layout'
 import { useStore } from '../../state/store'
-import { IconDownload, IconFit, IconLayout, IconNote } from '../icons'
-import { AnnotationNode } from './AnnotationNode'
-import { PolicyFlowNode, type PolicyNodeData } from './PolicyFlowNode'
+import { IconDownload, IconFit, IconLayout } from '../icons'
+import { PolicyFlowNode } from './PolicyFlowNode'
 
-const nodeTypes = { policy: PolicyFlowNode, annotation: AnnotationNode }
+const nodeTypes = { policy: PolicyFlowNode }
 
 export function CanvasPanel() {
   return (
@@ -40,12 +36,9 @@ function Canvas() {
   const root = useStore((s) => s.root)
   const keys = useStore((s) => s.keys)
   const selectedNodeId = useStore((s) => s.selectedNodeId)
-  const annotations = useStore((s) => s.annotations)
   const overrides = useStore((s) => s.positionOverrides)
   const selectNode = useStore((s) => s.selectNode)
   const setNodePosition = useStore((s) => s.setNodePosition)
-  const updateAnnotation = useStore((s) => s.updateAnnotation)
-  const removeAnnotation = useStore((s) => s.removeAnnotation)
   const removeNode = useStore((s) => s.removeNode)
   const { fitView } = useReactFlow()
 
@@ -62,17 +55,8 @@ function Canvas() {
         data: describeNode(node, keys, node.id === root.id),
       })
     })
-    for (const note of annotations) {
-      result.push({
-        id: note.id,
-        type: 'annotation',
-        position: { x: note.x, y: note.y },
-        selected: note.id === selectedNodeId,
-        data: { text: note.text },
-      })
-    }
     return result
-  }, [root, keys, annotations, overrides, selectedNodeId])
+  }, [root, keys, overrides, selectedNodeId])
 
   // Local node state keeps drags 1:1 with the pointer; the store is the
   // source of truth for structure and committed positions. When the store
@@ -104,7 +88,7 @@ function Canvas() {
           // Required conditions connect solid, alternatives dashed.
           style: {
             stroke: color,
-            strokeOpacity: 0.5,
+            strokeOpacity: 0.55,
             strokeWidth: 1.5,
             strokeDasharray: node.type === 'and' ? undefined : '6 5',
           },
@@ -144,22 +128,17 @@ function Canvas() {
             if (change.dragging !== false || !change.position || Number.isNaN(change.position.x)) {
               break
             }
-            if (change.id.startsWith('a_')) {
-              updateAnnotation(change.id, { x: change.position.x, y: change.position.y })
-            } else {
-              setNodePosition(change.id, change.position.x, change.position.y)
-            }
+            setNodePosition(change.id, change.position.x, change.position.y)
             break
           }
           case 'remove': {
-            if (change.id.startsWith('a_')) removeAnnotation(change.id)
-            else removeNode(change.id)
+            removeNode(change.id)
             break
           }
         }
       }
     },
-    [selectNode, setNodePosition, updateAnnotation, removeAnnotation, removeNode],
+    [selectNode, setNodePosition, removeNode],
   )
 
   // Refit when the tree structure changes (nodes added/removed).
@@ -168,7 +147,7 @@ function Canvas() {
   useEffect(() => {
     if (previousSize.current !== structureSize) {
       previousSize.current = structureSize
-      void fitView({ padding: 0.25, duration: 300 })
+      void fitView({ padding: 0.2, duration: 300 })
     }
   }, [structureSize, fitView])
 
@@ -181,26 +160,14 @@ function Canvas() {
         onNodesChange={onNodesChange}
         onPaneClick={() => selectNode(null)}
         fitView
-        fitViewOptions={{ padding: 0.25 }}
+        fitViewOptions={{ padding: 0.2 }}
         minZoom={0.2}
         maxZoom={2.5}
         nodesConnectable={false}
         deleteKeyCode={['Delete', 'Backspace']}
         proOptions={{ hideAttribution: false }}
       >
-        <Background variant={BackgroundVariant.Dots} gap={26} size={1.6} color="rgba(154, 170, 207, 0.16)" />
         <Controls showInteractive={false} position="bottom-right" />
-        <MiniMap
-          className="canvas-minimap"
-          position="bottom-left"
-          style={{ width: 150, height: 100 }}
-          pannable
-          zoomable
-          nodeColor={(node) => ((node.data as PolicyNodeData)?.color as string) ?? '#4a5570'}
-          nodeStrokeWidth={0}
-          maskColor="rgba(10, 14, 23, 0.72)"
-          bgColor="rgba(16, 21, 36, 0.9)"
-        />
         <CanvasToolbar />
       </ReactFlow>
     </div>
@@ -208,24 +175,12 @@ function Canvas() {
 }
 
 function CanvasToolbar() {
-  const addAnnotation = useStore((s) => s.addAnnotation)
   const resetLayout = useStore((s) => s.resetLayout)
-  const selectNode = useStore((s) => s.selectNode)
-  const { fitView, screenToFlowPosition, getNodes } = useReactFlow()
-
-  const addNote = () => {
-    const pane = document.querySelector('.react-flow__pane')
-    const rect = pane?.getBoundingClientRect()
-    const center = rect
-      ? screenToFlowPosition({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 3 })
-      : { x: 0, y: 0 }
-    const id = addAnnotation(center.x, center.y)
-    selectNode(id)
-  }
+  const { fitView, getNodes } = useReactFlow()
 
   const autoLayout = () => {
     resetLayout()
-    requestAnimationFrame(() => void fitView({ padding: 0.25, duration: 300 }))
+    requestAnimationFrame(() => void fitView({ padding: 0.2, duration: 300 }))
   }
 
   const exportPng = async () => {
@@ -239,7 +194,7 @@ function CanvasToolbar() {
       const scale = Math.min(2, 4096 / width, 4096 / height)
       const view = getViewportForBounds(bounds, width, height, 0.4, 2, 0.08)
       const dataUrl = await toPng(viewport, {
-        backgroundColor: '#0a0e17',
+        backgroundColor: '#f2f1ec',
         width: width * scale,
         height: height * scale,
         style: {
@@ -260,17 +215,13 @@ function CanvasToolbar() {
 
   return (
     <Panel position="top-right" className="canvas-toolbar">
-      <button type="button" className="btn" onClick={addNote} title="Add a note to the diagram">
-        <IconNote size={14} />
-        <span>Note</span>
-      </button>
       <button type="button" className="btn btn-icon" onClick={autoLayout} aria-label="Auto layout" title="Auto layout">
         <IconLayout size={15} />
       </button>
       <button
         type="button"
         className="btn btn-icon"
-        onClick={() => void fitView({ padding: 0.25, duration: 300 })}
+        onClick={() => void fitView({ padding: 0.2, duration: 300 })}
         aria-label="Fit view"
         title="Fit view"
       >
@@ -296,7 +247,7 @@ function keyColor(node: PolicyNode & { type: 'key' }, keys: KeyParticipant[]): s
   return participant ? participantColor(participant.colorIndex) : TYPE_COLORS.key
 }
 
-function describeNode(node: PolicyNode, keys: KeyParticipant[], isRoot: boolean): PolicyNodeData {
+function describeNode(node: PolicyNode, keys: KeyParticipant[], isRoot: boolean) {
   const base = {
     nodeType: node.type,
     color: TYPE_COLORS[node.type],

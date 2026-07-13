@@ -37,9 +37,10 @@ async function openBuildTabIfMobile(page: Page) {
 test('loads the default example and compiles it', async ({ page }) => {
   await openCodeTabIfMobile(page)
   await expect(policyBlock(page)).toContainText('or(9@pk(Owner),and(pk(Heir),older(26280)))')
-  await expect(page.locator('.status-chip.is-ok')).toBeVisible()
   await expect(miniscriptBlock(page)).toContainText('pk(Owner)')
   await expect(descriptorBlock(page)).toContainText(/^wsh\(/)
+  // No warnings for a sane policy.
+  await expect(page.locator('.status-issue')).toHaveCount(0)
 })
 
 test('script context changes the descriptor wrapper', async ({ page }) => {
@@ -48,7 +49,6 @@ test('script context changes the descriptor wrapper', async ({ page }) => {
   await expect(descriptorBlock(page)).toContainText(/^sh\(wsh\(/)
   await page.getByRole('radio', { name: 'P2TR' }).click()
   await expect(descriptorBlock(page)).toContainText(/^tr\(/)
-  await expect(page.locator('.status-chip.is-ok')).toBeVisible()
 })
 
 test('taproot thresholds compile to multi_a', async ({ page }) => {
@@ -130,16 +130,18 @@ test('copy button provides feedback and fills the clipboard', async ({ page, con
 
 test('breaking a policy shows errors instead of stale output', async ({ page }) => {
   await page.getByRole('button', { name: 'Examples' }).click()
-  await page.getByRole('menuitem', { name: 'Hash time-locked contract' }).click()
+  await page.getByRole('menuitem', { name: '2-of-3 multisig' }).click()
   await openBuildTabIfMobile(page)
+  await page.getByRole('button', { name: 'Add condition' }).click()
+  await page.getByRole('menuitem', { name: 'Hash lock' }).click()
   const digest = page.getByLabel('Hash digest (hex)')
   await digest.fill('beef')
   await openCodeTabIfMobile(page)
-  await expect(page.locator('.status-chip.is-error')).toBeVisible()
+  await expect(page.locator('.status-issue.is-error').first()).toBeVisible()
   await expect(miniscriptBlock(page)).toContainText('nothing to show')
 })
 
-test('diagram: nodes render, drag moves them, notes can be added', async ({ page }, testInfo) => {
+test('diagram: nodes render and drag moves them', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name === 'mobile', 'drag interactions are desktop-focused')
 
   const orNode = page.locator('.flow-node', { hasText: 'OR' }).first()
@@ -155,19 +157,6 @@ test('diagram: nodes render, drag moves them, notes can be added', async ({ page
   await page.waitForTimeout(200)
   const after = await orNode.boundingBox()
   expect(Math.abs(after!.x - before!.x)).toBeGreaterThan(100)
-
-  // Add an annotation and type into it.
-  await page.getByRole('button', { name: 'Note', exact: true }).click()
-  const noteInput = page.getByLabel('Annotation text')
-  await expect(noteInput).toBeVisible()
-  await noteInput.fill('Emergency recovery path')
-  await page.locator('.react-flow__pane').click({ position: { x: 40, y: 40 } })
-  await expect(page.locator('.flow-note-text')).toContainText('Emergency recovery path')
-
-  // Delete the note.
-  await page.locator('.flow-note').hover()
-  await page.getByRole('button', { name: 'Delete note' }).click()
-  await expect(page.locator('.flow-note')).toHaveCount(0)
 })
 
 test('selection syncs from diagram to builder and code', async ({ page }, testInfo) => {

@@ -2,6 +2,17 @@
 
 Working notes on where the project stands. Newest first.
 
+## 2026-07-13 — Light theme redesign (user feedback pass)
+
+- Single light theme: warm paper background, white cards, darkened type/participant palettes (WCAG AA kept).
+- Diagram now lays out left-to-right (root on the left) — more compact vertically, outputs visible without scrolling.
+- Removed: annotations/notes, minimap, dotted canvas background, "Compiles/sane/non-malleable" badges (errors and warnings still surface, only when present).
+- Disclaimer moved to a visible band at the top of the builder sidebar.
+- Examples: HTLC removed; added 3-of-5 multisig and "Multisig + recovery key"; decaying multisig description clarified (semantics verified: thresh(3, A, B, C, older) is the standard pattern).
+- Header compacted to a single row; AND/OR icons now pure logic wedge/vee (∧/∨); native select options given explicit colors (white-on-white dropdown fix).
+- Store: annotations removed, persist version bumped to 2.
+- 73 unit + 29 e2e tests green after the redesign.
+
 ## 2026-07-13 — Review pass, accessibility, hardening
 
 Dedicated review of the whole codebase, findings fixed:

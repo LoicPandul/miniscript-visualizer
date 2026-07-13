@@ -3,7 +3,7 @@ import { participantColor, TYPE_COLORS } from '../../core/colors'
 import { serializeTokens } from '../../core/serialize'
 import { useStore } from '../../state/store'
 import { tokenizeAsm, tokenizeMiniscript, type CodeToken } from '../../lib/tokens'
-import { IconAlert, IconCheck, IconInfo, IconSpinner } from '../icons'
+import { IconAlert, IconInfo } from '../icons'
 import { CodeBlock } from './CodeBlock'
 
 export function OutputPanel() {
@@ -30,7 +30,7 @@ export function OutputPanel() {
 
   return (
     <section className="output" aria-label="Compiled output">
-      <StatusStrip />
+      <IssuesBar />
       <div className="output-blocks">
         <CodeBlock title="Policy" hint="human-readable spending conditions" copyText={policyText}>
           <PolicyColorized />
@@ -64,10 +64,6 @@ export function OutputPanel() {
           {ok && result.asm ? <Colorized tokens={asmTokens} keys={keys} /> : null}
         </CodeBlock>
       </div>
-      <p className="output-disclaimer">
-        Educational tool: keys are aliases, not real keys. Design and learn here, secure real funds
-        with actual wallet software.
-      </p>
     </section>
   )
 }
@@ -76,83 +72,37 @@ function placeholderFor(status: 'loading' | 'ready' | 'error'): string {
   return status === 'error' ? 'nothing to show — fix the policy first' : 'compiling…'
 }
 
-function StatusStrip() {
+/** Silent when everything is fine; only surfaces problems. */
+function IssuesBar() {
   const compile = useStore((s) => s.compile)
   const { status, result, issues } = compile
   const warnings = issues.filter((i) => i.level === 'warning')
   const errors = issues.filter((i) => i.level === 'error')
+  const compileError = status === 'error' && result && !result.ok ? result.error : null
+
+  if (!compileError && errors.length === 0 && warnings.length === 0) return null
 
   return (
-    <div className="status-strip">
-      <div className="status-row">
-        {status === 'loading' && (
-          <span className="status-chip is-loading">
-            <IconSpinner size={13} />
-            Compiling
-          </span>
-        )}
-        {status === 'ready' && result?.ok && (
-          <>
-            <span className="status-chip is-ok">
-              <IconCheck size={13} />
-              Compiles
-            </span>
-            {result.issane ? (
-              <span className="status-badge" title="The script is consensus- and standardness-safe">
-                sane
-              </span>
-            ) : (
-              <span className="status-badge is-warn" title="The compiler flagged this script as non-sane">
-                not sane
-              </span>
-            )}
-            {result.analysis?.nonMalleable && (
-              <span className="status-badge" title="Satisfactions cannot be malleated by third parties">
-                non-malleable
-              </span>
-            )}
-            {result.analysis?.timelockMix && (
-              <span
-                className="status-badge is-warn"
-                title="A spending path mixes block-based and time-based locks"
-              >
-                timelock mix
-              </span>
-            )}
-            {result.analysis?.hasDuplicateKeys && (
-              <span
-                className="status-badge is-warn"
-                title="The same key appears in several places of the script"
-              >
-                duplicate keys
-              </span>
-            )}
-          </>
-        )}
-        {status === 'error' && (
-          <span className="status-chip is-error">
-            <IconAlert size={13} />
-            {result && !result.ok ? result.error : 'Fix the highlighted conditions'}
-          </span>
-        )}
-      </div>
-      {(errors.length > 0 || warnings.length > 0) && (
-        <ul className="status-issues">
-          {errors.map((issue, i) => (
-            <li key={`e${i}`} className="status-issue is-error">
-              <IconAlert size={12} />
-              {issue.message}
-            </li>
-          ))}
-          {warnings.map((issue, i) => (
-            <li key={`w${i}`} className="status-issue">
-              <IconInfo size={12} />
-              {issue.message}
-            </li>
-          ))}
-        </ul>
+    <ul className="status-issues" aria-live="polite">
+      {compileError && (
+        <li className="status-issue is-error">
+          <IconAlert size={12} />
+          {compileError}
+        </li>
       )}
-    </div>
+      {errors.map((issue, i) => (
+        <li key={`e${i}`} className="status-issue is-error">
+          <IconAlert size={12} />
+          {issue.message}
+        </li>
+      ))}
+      {warnings.map((issue, i) => (
+        <li key={`w${i}`} className="status-issue">
+          <IconInfo size={12} />
+          {issue.message}
+        </li>
+      ))}
+    </ul>
   )
 }
 
