@@ -42,8 +42,11 @@ export function parsePolicy(input: string): ParsedPolicy {
 class Parser {
   pos = 0
   participants: KeyParticipant[] = []
+  readonly src: string
 
-  constructor(readonly src: string) {}
+  constructor(src: string) {
+    this.src = src
+  }
 
   atEnd(): boolean {
     return this.pos >= this.src.length

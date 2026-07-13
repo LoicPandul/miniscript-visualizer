@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@bitcoinerlab/miniscript": "^2.0.0",
@@ -16,11 +18,13 @@
     "@fontsource-variable/spline-sans-mono": "^5.2.8",
     "@xyflow/react": "^12.11.2",
     "d3-hierarchy": "^3.1.2",
+    "html-to-image": "^1.11.13",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "zustand": "^5.0.14"
   },
   "devDependencies": {
+    "@playwright/test": "^1.61.1",
     "@types/d3-hierarchy": "^3.1.7",
     "@types/node": "^24.13.2",
     "@types/react": "^19.2.17",

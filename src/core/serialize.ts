@@ -71,7 +71,7 @@ function emit(node: PolicyNode, lookup: KeyLookup, tokens: PolicyToken[]): void 
 }
 
 function emitBinary(
-  node: PolicyNode,
+  node: Extract<PolicyNode, { type: 'and' | 'or' }>,
   name: 'and' | 'or',
   children: PolicyNode[],
   weights: number[] | undefined,

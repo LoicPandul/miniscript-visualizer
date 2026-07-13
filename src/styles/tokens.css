@@ -1,0 +1,77 @@
+/* Design tokens — single dark theme, committed. */
+
+:root {
+  color-scheme: dark;
+
+  /* Surfaces */
+  --bg: #0a0e17;
+  --bg-raised: #101524;
+  --bg-panel: #0e1320;
+  --bg-overlay: rgba(13, 18, 31, 0.82);
+  --bg-input: #151b2d;
+  --bg-hover: rgba(154, 170, 207, 0.08);
+  --bg-active: rgba(154, 170, 207, 0.14);
+
+  /* Lines */
+  --hairline: rgba(154, 170, 207, 0.14);
+  --hairline-strong: rgba(154, 170, 207, 0.26);
+
+  /* Text */
+  --text: #e8edf7;
+  --text-secondary: #a7b2cc;
+  --text-muted: #6d7a99;
+  --text-faint: #4a5570;
+
+  /* Brand */
+  --accent: #f7c948;
+  --accent-strong: #ffd75e;
+  --accent-ink: #201a05;
+  --danger: #ff6b6b;
+  --warning: #ffb454;
+  --ok: #3ecf8e;
+
+  /* Condition type colors */
+  --c-key: #f7c948;
+  --c-and: #5b9dff;
+  --c-or: #f06fb7;
+  --c-thresh: #a88bfa;
+  --c-after: #3ecf8e;
+  --c-older: #35c7d6;
+  --c-hash: #ff9a3e;
+
+  /* Participant palette (cycled) */
+  --p-0: #f7c948;
+  --p-1: #ff7e67;
+  --p-2: #6bc5ff;
+  --p-3: #a8db3f;
+  --p-4: #d293ff;
+  --p-5: #ff93c9;
+  --p-6: #4fd8c4;
+  --p-7: #d9b991;
+
+  /* Typography */
+  --font-ui: 'Instrument Sans Variable', system-ui, -apple-system, sans-serif;
+  --font-mono: 'Spline Sans Mono Variable', ui-monospace, 'Cascadia Mono', monospace;
+
+  /* Shape */
+  --radius-lg: 14px;
+  --radius: 10px;
+  --radius-sm: 7px;
+  --radius-xs: 5px;
+
+  /* Elevation */
+  --shadow-panel: 0 1px 0 rgba(255, 255, 255, 0.03) inset, 0 10px 30px rgba(2, 4, 10, 0.45);
+  --shadow-pop: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 18px 50px rgba(2, 4, 10, 0.65);
+  --shadow-node: 0 2px 14px rgba(2, 4, 10, 0.5);
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --dur-fast: 120ms;
+  --dur: 200ms;
+
+  /* Z scale */
+  --z-canvas-ui: 10;
+  --z-header: 20;
+  --z-menu: 30;
+  --z-modal: 50;
+}

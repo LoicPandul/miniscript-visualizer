@@ -1,0 +1,309 @@
+import {
+  applyNodeChanges,
+  Background,
+  BackgroundVariant,
+  Controls,
+  getNodesBounds,
+  getViewportForBounds,
+  MiniMap,
+  Panel,
+  ReactFlow,
+  ReactFlowProvider,
+  useReactFlow,
+  type Edge,
+  type Node,
+  type NodeChange,
+} from '@xyflow/react'
+import { toPng } from 'html-to-image'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { participantColor, TYPE_COLORS } from '../../core/colors'
+import type { KeyParticipant, PolicyNode } from '../../core/policy'
+import { countNodes, isBranch, LOCKTIME_THRESHOLD, walk } from '../../core/policy'
+import { describeOlder } from '../../core/timelocks'
+import { layoutTree } from '../../lib/layout'
+import { useStore } from '../../state/store'
+import { IconDownload, IconFit, IconLayout, IconNote } from '../icons'
+import { AnnotationNode } from './AnnotationNode'
+import { PolicyFlowNode, type PolicyNodeData } from './PolicyFlowNode'
+
+const nodeTypes = { policy: PolicyFlowNode, annotation: AnnotationNode }
+
+export function CanvasPanel() {
+  return (
+    <ReactFlowProvider>
+      <Canvas />
+    </ReactFlowProvider>
+  )
+}
+
+function Canvas() {
+  const root = useStore((s) => s.root)
+  const keys = useStore((s) => s.keys)
+  const selectedNodeId = useStore((s) => s.selectedNodeId)
+  const annotations = useStore((s) => s.annotations)
+  const overrides = useStore((s) => s.positionOverrides)
+  const selectNode = useStore((s) => s.selectNode)
+  const setNodePosition = useStore((s) => s.setNodePosition)
+  const updateAnnotation = useStore((s) => s.updateAnnotation)
+  const removeAnnotation = useStore((s) => s.removeAnnotation)
+  const removeNode = useStore((s) => s.removeNode)
+  const { fitView } = useReactFlow()
+
+  const derivedNodes = useMemo<Node[]>(() => {
+    const layout = layoutTree(root)
+    const result: Node[] = []
+    walk(root, (node) => {
+      const position = overrides[node.id] ?? layout[node.id]
+      result.push({
+        id: node.id,
+        type: 'policy',
+        position,
+        selected: node.id === selectedNodeId,
+        data: describeNode(node, keys, node.id === root.id),
+      })
+    })
+    for (const note of annotations) {
+      result.push({
+        id: note.id,
+        type: 'annotation',
+        position: { x: note.x, y: note.y },
+        selected: note.id === selectedNodeId,
+        data: { text: note.text },
+      })
+    }
+    return result
+  }, [root, keys, annotations, overrides, selectedNodeId])
+
+  // Local node state keeps drags 1:1 with the pointer; the store is the
+  // source of truth for structure and committed positions.
+  const [nodes, setNodes] = useState<Node[]>(derivedNodes)
+  useEffect(() => {
+    setNodes(derivedNodes)
+  }, [derivedNodes])
+
+  const edges = useMemo<Edge[]>(() => {
+    const result: Edge[] = []
+    walk(root, (node) => {
+      if (!isBranch(node)) return
+      for (const child of node.children) {
+        const color = child.type === 'key' ? keyColor(child, keys) : TYPE_COLORS[child.type]
+        result.push({
+          id: `${node.id}→${child.id}`,
+          source: node.id,
+          target: child.id,
+          // Required conditions connect solid, alternatives dashed.
+          style: {
+            stroke: color,
+            strokeOpacity: 0.5,
+            strokeWidth: 1.5,
+            strokeDasharray: node.type === 'and' ? undefined : '6 5',
+          },
+        })
+      }
+    })
+    return result
+  }, [root, keys])
+
+  const onNodesChange = useCallback(
+    (changes: NodeChange[]) => {
+      // Apply visually right away (1:1 drag), then persist what matters.
+      setNodes((current) => applyNodeChanges(changes, current))
+      for (const change of changes) {
+        switch (change.type) {
+          case 'position': {
+            // Commit to the store only when the drag settles.
+            if (change.dragging !== false || !change.position || Number.isNaN(change.position.x)) {
+              break
+            }
+            if (change.id.startsWith('a_')) {
+              updateAnnotation(change.id, { x: change.position.x, y: change.position.y })
+            } else {
+              setNodePosition(change.id, change.position.x, change.position.y)
+            }
+            break
+          }
+          case 'select': {
+            if (change.selected) selectNode(change.id)
+            else if (selectedNodeId === change.id) selectNode(null)
+            break
+          }
+          case 'remove': {
+            if (change.id.startsWith('a_')) removeAnnotation(change.id)
+            else removeNode(change.id)
+            break
+          }
+        }
+      }
+    },
+    [selectNode, selectedNodeId, setNodePosition, updateAnnotation, removeAnnotation, removeNode],
+  )
+
+  // Refit when the tree structure changes (nodes added/removed).
+  const structureSize = countNodes(root)
+  const previousSize = useRef(structureSize)
+  useEffect(() => {
+    if (previousSize.current !== structureSize) {
+      previousSize.current = structureSize
+      void fitView({ padding: 0.25, duration: 300 })
+    }
+  }, [structureSize, fitView])
+
+  return (
+    <div className="canvas" aria-label="Policy diagram">
+      <ReactFlow
+        nodes={nodes}
+        edges={edges}
+        nodeTypes={nodeTypes}
+        onNodesChange={onNodesChange}
+        onPaneClick={() => selectNode(null)}
+        fitView
+        fitViewOptions={{ padding: 0.25 }}
+        minZoom={0.2}
+        maxZoom={2.5}
+        nodesConnectable={false}
+        deleteKeyCode={['Delete', 'Backspace']}
+        proOptions={{ hideAttribution: false }}
+      >
+        <Background variant={BackgroundVariant.Dots} gap={26} size={1.6} color="rgba(154, 170, 207, 0.16)" />
+        <Controls showInteractive={false} position="bottom-right" />
+        <MiniMap
+          className="canvas-minimap"
+          position="bottom-left"
+          pannable
+          zoomable
+          nodeColor={(node) => ((node.data as PolicyNodeData)?.color as string) ?? '#4a5570'}
+          nodeStrokeWidth={0}
+          maskColor="rgba(10, 14, 23, 0.72)"
+          bgColor="rgba(16, 21, 36, 0.9)"
+        />
+        <CanvasToolbar />
+      </ReactFlow>
+    </div>
+  )
+}
+
+function CanvasToolbar() {
+  const addAnnotation = useStore((s) => s.addAnnotation)
+  const resetLayout = useStore((s) => s.resetLayout)
+  const selectNode = useStore((s) => s.selectNode)
+  const { fitView, screenToFlowPosition, getNodes } = useReactFlow()
+
+  const addNote = () => {
+    const pane = document.querySelector('.react-flow__pane')
+    const rect = pane?.getBoundingClientRect()
+    const center = rect
+      ? screenToFlowPosition({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 3 })
+      : { x: 0, y: 0 }
+    const id = addAnnotation(center.x, center.y)
+    selectNode(id)
+  }
+
+  const autoLayout = () => {
+    resetLayout()
+    requestAnimationFrame(() => void fitView({ padding: 0.25, duration: 300 }))
+  }
+
+  const exportPng = async () => {
+    const viewport = document.querySelector<HTMLElement>('.react-flow__viewport')
+    if (!viewport) return
+    const bounds = getNodesBounds(getNodes())
+    const scale = 2
+    const width = Math.min(4096, Math.max(640, Math.ceil(bounds.width + 160)))
+    const height = Math.min(4096, Math.max(480, Math.ceil(bounds.height + 160)))
+    const view = getViewportForBounds(bounds, width, height, 0.4, 2, 0.08)
+    const dataUrl = await toPng(viewport, {
+      backgroundColor: '#0a0e17',
+      width: width * scale,
+      height: height * scale,
+      style: {
+        width: `${width}px`,
+        height: `${height}px`,
+        transform: `scale(${scale}) translate(${view.x}px, ${view.y}px) scale(${view.zoom})`,
+        transformOrigin: 'top left',
+      },
+    })
+    const link = document.createElement('a')
+    link.download = 'miniscript-policy.png'
+    link.href = dataUrl
+    link.click()
+  }
+
+  return (
+    <Panel position="top-right" className="canvas-toolbar">
+      <button type="button" className="btn" onClick={addNote} title="Add a note to the diagram">
+        <IconNote size={14} />
+        <span>Note</span>
+      </button>
+      <button type="button" className="btn btn-icon" onClick={autoLayout} aria-label="Auto layout" title="Auto layout">
+        <IconLayout size={15} />
+      </button>
+      <button
+        type="button"
+        className="btn btn-icon"
+        onClick={() => void fitView({ padding: 0.25, duration: 300 })}
+        aria-label="Fit view"
+        title="Fit view"
+      >
+        <IconFit size={15} />
+      </button>
+      <button
+        type="button"
+        className="btn btn-icon"
+        onClick={() => void exportPng()}
+        aria-label="Export diagram as PNG"
+        title="Export PNG"
+      >
+        <IconDownload size={15} />
+      </button>
+    </Panel>
+  )
+}
+
+/* ---------- Node presentation ---------- */
+
+function keyColor(node: PolicyNode & { type: 'key' }, keys: KeyParticipant[]): string {
+  const participant = keys.find((k) => k.id === node.keyId)
+  return participant ? participantColor(participant.colorIndex) : TYPE_COLORS.key
+}
+
+function describeNode(node: PolicyNode, keys: KeyParticipant[], isRoot: boolean): PolicyNodeData {
+  const base = {
+    nodeType: node.type,
+    color: TYPE_COLORS[node.type],
+    hasChildren: isBranch(node) && node.children.length > 0,
+    isRoot,
+  }
+  switch (node.type) {
+    case 'key': {
+      const participant = keys.find((k) => k.id === node.keyId)
+      return {
+        ...base,
+        color: keyColor(node, keys),
+        title: participant?.alias ?? 'Missing key',
+        subtitle: 'signature',
+      }
+    }
+    case 'and':
+      return { ...base, title: 'AND', subtitle: 'all required' }
+    case 'or': {
+      const weights =
+        node.weights && node.children.length === 2 && node.weights.some((w) => w !== 1)
+          ? ` · ${node.weights[0]} : ${node.weights[1]}`
+          : ''
+      return { ...base, title: 'OR', subtitle: `one branch${weights}` }
+    }
+    case 'thresh':
+      return { ...base, title: 'THRESHOLD', subtitle: `${node.k} of ${node.children.length}` }
+    case 'after': {
+      const subtitle =
+        node.value >= LOCKTIME_THRESHOLD
+          ? new Date(node.value * 1000).toISOString().slice(0, 10)
+          : `block ${node.value.toLocaleString('en-US')}`
+      return { ...base, title: 'AFTER', subtitle }
+    }
+    case 'older':
+      return { ...base, title: 'OLDER', subtitle: describeOlder(node.value) }
+    case 'hash':
+      return { ...base, title: 'HASH', subtitle: `${node.algo} · ${node.digest.slice(0, 8)}…` }
+  }
+}
