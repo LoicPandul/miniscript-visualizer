@@ -17,4 +17,4 @@ This is an educational tool, made to learn, teach and prototype spending policie
 
 ## License
 
-[MIT](LICENSE)
+[MIT](LICENSE) 
