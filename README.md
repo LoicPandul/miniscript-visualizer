@@ -15,17 +15,6 @@ Compilation runs entirely in your browser, with the reference policy compiler fr
 
 This is an educational tool, made to learn, teach and prototype spending policies. It is not wallet software: keys are simple aliases, and nothing here should secure real funds.
 
-## Run it locally
-
-```bash
-npm install
-npm run dev
-```
-
-## Credits
-
-This tool is a from-scratch rebuild inspired by the policy playground that [bitcoindevkit.org](https://bitcoindevkit.org) used to host. No code was reused, but the idea comes from there.
-
 ## License
 
 [MIT](LICENSE)
