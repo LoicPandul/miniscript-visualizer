@@ -88,6 +88,8 @@
 
 .brand-mark {
   flex-shrink: 0;
+  border-radius: 9px;
+  display: block;
 }
 
 .header-title h1 {

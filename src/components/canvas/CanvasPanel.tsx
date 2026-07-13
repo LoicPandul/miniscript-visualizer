@@ -75,10 +75,20 @@ function Canvas() {
   }, [root, keys, annotations, overrides, selectedNodeId])
 
   // Local node state keeps drags 1:1 with the pointer; the store is the
-  // source of truth for structure and committed positions.
+  // source of truth for structure and committed positions. When the store
+  // re-derives mid-drag (e.g. selection changed on grab), the live position
+  // of the dragged node is preserved to avoid a one-frame snap-back.
   const [nodes, setNodes] = useState<Node[]>(derivedNodes)
   useEffect(() => {
-    setNodes(derivedNodes)
+    setNodes((current) => {
+      const dragging = new Map(
+        current.filter((n) => n.dragging).map((n) => [n.id, n.position]),
+      )
+      if (dragging.size === 0) return derivedNodes
+      return derivedNodes.map((n) =>
+        dragging.has(n.id) ? { ...n, position: dragging.get(n.id)!, dragging: true } : n,
+      )
+    })
   }, [derivedNodes])
 
   const edges = useMemo<Edge[]>(() => {

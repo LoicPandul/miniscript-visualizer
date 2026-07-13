@@ -34,10 +34,19 @@ export function useCompilePipeline(): void {
     setCompile({ status: 'loading', result: null, issues })
 
     const timer = setTimeout(() => {
-      void compile(policy, context).then((result) => {
-        if (cancelled) return
-        setCompile({ status: result.ok ? 'ready' : 'error', result, issues })
-      })
+      compile(policy, context)
+        .then((result) => {
+          if (cancelled) return
+          setCompile({ status: result.ok ? 'ready' : 'error', result, issues })
+        })
+        .catch(() => {
+          if (cancelled) return
+          setCompile({
+            status: 'error',
+            result: { ok: false, error: 'The compiler failed to load. Check your connection and reload.' },
+            issues,
+          })
+        })
     }, DEBOUNCE_MS)
 
     return () => {

@@ -131,18 +131,5 @@ function ExamplesMenu() {
 }
 
 function BrandMark() {
-  return (
-    <svg className="brand-mark" width="34" height="34" viewBox="0 0 34 34" aria-hidden="true">
-      <rect x="1" y="1" width="32" height="32" rx="8" fill="none" stroke="var(--hairline-strong)" />
-      <path
-        d="M17 8v5M17 13 10.5 20M17 13l6.5 7"
-        stroke="var(--text-muted)"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-      />
-      <circle cx="17" cy="8" r="3" fill="var(--accent)" />
-      <circle cx="10.5" cy="21.5" r="2.6" fill="var(--c-and)" />
-      <circle cx="23.5" cy="21.5" r="2.6" fill="var(--c-or)" />
-    </svg>
-  )
+  return <img className="brand-mark" src="/logo-128.png" width="34" height="34" alt="" />
 }
