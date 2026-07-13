@@ -80,6 +80,11 @@ export function tokenizeMiniscript(source: string, keys: KeyParticipant[]): Code
         pushText(name, { keyId, nodeType: 'key' })
         continue
       }
+      // Hex digests that start with a letter also match the word pattern.
+      if (name.length >= 8 && /^[0-9a-fA-F]+$/.test(name)) {
+        pushText(name, { kind: 'dim' })
+        continue
+      }
       const type = FRAGMENT_TYPE[name]
       if (type) {
         pushText(name, { nodeType: type })

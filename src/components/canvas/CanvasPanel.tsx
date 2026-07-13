@@ -116,9 +116,28 @@ function Canvas() {
 
   const onNodesChange = useCallback(
     (changes: NodeChange[]) => {
+      // The store refuses to remove the root — don't apply it locally either.
+      const rootId = useStore.getState().root.id
+      const applicable = changes.filter((c) => !(c.type === 'remove' && c.id === rootId))
+
       // Apply visually right away (1:1 drag), then persist what matters.
-      setNodes((current) => applyNodeChanges(changes, current))
-      for (const change of changes) {
+      setNodes((current) => applyNodeChanges(applicable, current))
+
+      // Selection changes arrive as a batch (new selection + old deselection,
+      // in node order): resolve them together against the CURRENT store value
+      // to avoid a stale closure wiping a just-made selection.
+      const selects = applicable.filter((c) => c.type === 'select')
+      if (selects.length > 0) {
+        const nowSelected = selects.find((c) => c.selected)
+        if (nowSelected) {
+          selectNode(nowSelected.id)
+        } else {
+          const current = useStore.getState().selectedNodeId
+          if (selects.some((c) => c.id === current)) selectNode(null)
+        }
+      }
+
+      for (const change of applicable) {
         switch (change.type) {
           case 'position': {
             // Commit to the store only when the drag settles.
@@ -132,11 +151,6 @@ function Canvas() {
             }
             break
           }
-          case 'select': {
-            if (change.selected) selectNode(change.id)
-            else if (selectedNodeId === change.id) selectNode(null)
-            break
-          }
           case 'remove': {
             if (change.id.startsWith('a_')) removeAnnotation(change.id)
             else removeNode(change.id)
@@ -145,7 +159,7 @@ function Canvas() {
         }
       }
     },
-    [selectNode, selectedNodeId, setNodePosition, updateAnnotation, removeAnnotation, removeNode],
+    [selectNode, setNodePosition, updateAnnotation, removeAnnotation, removeNode],
   )
 
   // Refit when the tree structure changes (nodes added/removed).
@@ -217,26 +231,31 @@ function CanvasToolbar() {
   const exportPng = async () => {
     const viewport = document.querySelector<HTMLElement>('.react-flow__viewport')
     if (!viewport) return
-    const bounds = getNodesBounds(getNodes())
-    const scale = 2
-    const width = Math.min(4096, Math.max(640, Math.ceil(bounds.width + 160)))
-    const height = Math.min(4096, Math.max(480, Math.ceil(bounds.height + 160)))
-    const view = getViewportForBounds(bounds, width, height, 0.4, 2, 0.08)
-    const dataUrl = await toPng(viewport, {
-      backgroundColor: '#0a0e17',
-      width: width * scale,
-      height: height * scale,
-      style: {
-        width: `${width}px`,
-        height: `${height}px`,
-        transform: `scale(${scale}) translate(${view.x}px, ${view.y}px) scale(${view.zoom})`,
-        transformOrigin: 'top left',
-      },
-    })
-    const link = document.createElement('a')
-    link.download = 'miniscript-policy.png'
-    link.href = dataUrl
-    link.click()
+    try {
+      const bounds = getNodesBounds(getNodes())
+      const width = Math.min(4096, Math.max(640, Math.ceil(bounds.width + 160)))
+      const height = Math.min(4096, Math.max(480, Math.ceil(bounds.height + 160)))
+      // Stay under common canvas size limits (Safari caps around 4096²).
+      const scale = Math.min(2, 4096 / width, 4096 / height)
+      const view = getViewportForBounds(bounds, width, height, 0.4, 2, 0.08)
+      const dataUrl = await toPng(viewport, {
+        backgroundColor: '#0a0e17',
+        width: width * scale,
+        height: height * scale,
+        style: {
+          width: `${width}px`,
+          height: `${height}px`,
+          transform: `scale(${scale}) translate(${view.x}px, ${view.y}px) scale(${view.zoom})`,
+          transformOrigin: 'top left',
+        },
+      })
+      const link = document.createElement('a')
+      link.download = 'miniscript-policy.png'
+      link.href = dataUrl
+      link.click()
+    } catch {
+      window.alert('The PNG export failed in this browser. Try zooming the diagram smaller first.')
+    }
   }
 
   return (

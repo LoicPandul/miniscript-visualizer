@@ -112,6 +112,7 @@ class Parser {
     if (weightMatch) {
       if (!allowWeight) this.fail('weights (N@) are only allowed inside or()')
       weight = Number.parseInt(weightMatch[1], 10)
+      if (weight < 1) this.fail('weights must be at least 1')
       this.pos += weightMatch[0].length
     }
     return { node: this.parseNode(), weight }

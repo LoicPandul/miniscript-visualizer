@@ -21,6 +21,7 @@ import {
   unitsToDays,
 } from '../../core/timelocks'
 import { useStore } from '../../state/store'
+import { handleRadioGroupKeys } from '../a11y'
 import { IconDice, IconMinus, IconPlus } from '../icons'
 
 /* ---------- Key ---------- */
@@ -170,11 +171,17 @@ export function AfterControl({ node }: { node: AfterNode }) {
 
   return (
     <div className="node-body node-body-stack">
-      <div className="mode-toggle" role="radiogroup" aria-label="Timelock unit">
+      <div
+        className="mode-toggle"
+        role="radiogroup"
+        aria-label="Timelock unit"
+        onKeyDown={handleRadioGroupKeys}
+      >
         <button
           type="button"
           role="radio"
           aria-checked={mode === 'height'}
+          tabIndex={mode === 'height' ? 0 : -1}
           className={`mode-btn${mode === 'height' ? ' is-active' : ''}`}
           onClick={() => switchMode('height')}
         >
@@ -184,6 +191,7 @@ export function AfterControl({ node }: { node: AfterNode }) {
           type="button"
           role="radio"
           aria-checked={mode === 'date'}
+          tabIndex={mode === 'date' ? 0 : -1}
           className={`mode-btn${mode === 'date' ? ' is-active' : ''}`}
           onClick={() => switchMode('date')}
         >
@@ -242,11 +250,17 @@ export function OlderControl({ node }: { node: OlderNode }) {
 
   return (
     <div className="node-body node-body-stack">
-      <div className="mode-toggle" role="radiogroup" aria-label="Relative timelock unit">
+      <div
+        className="mode-toggle"
+        role="radiogroup"
+        aria-label="Relative timelock unit"
+        onKeyDown={handleRadioGroupKeys}
+      >
         <button
           type="button"
           role="radio"
           aria-checked={mode === 'blocks'}
+          tabIndex={mode === 'blocks' ? 0 : -1}
           className={`mode-btn${mode === 'blocks' ? ' is-active' : ''}`}
           onClick={() => switchMode('blocks')}
         >
@@ -256,6 +270,7 @@ export function OlderControl({ node }: { node: OlderNode }) {
           type="button"
           role="radio"
           aria-checked={mode === 'time'}
+          tabIndex={mode === 'time' ? 0 : -1}
           className={`mode-btn${mode === 'time' ? ' is-active' : ''}`}
           onClick={() => switchMode('time')}
         >

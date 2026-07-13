@@ -2,7 +2,7 @@
 
 Design Bitcoin spending policies visually. You assemble conditions (keys, thresholds, timelocks, hash locks), the app draws the tree, and the policy, Miniscript, descriptor and raw script update live below. Each output is copiable in one click.
 
-Compilation runs entirely in your browser, with the reference policy compiler from [sipa/miniscript](https://github.com/sipa/miniscript) packaged by [@bitcoinerlab](https://github.com/bitcoinerlab/miniscript-policies). Nothing leaves your machine.
+Compilation runs entirely in your browser, with the reference policy compiler from [sipa/miniscript](https://github.com/sipa/miniscript) packaged by [@bitcoinerlab](https://github.com/bitcoinerlab/miniscript-policies).
 
 ## Features
 
@@ -13,14 +13,14 @@ Compilation runs entirely in your browser, with the reference policy compiler fr
 - Import any policy as text and get the visual tree back
 - Sanity and malleability analysis on every compilation
 
+This is an educational tool, made to learn, teach and prototype spending policies. It is not wallet software: keys are simple aliases, and nothing here should secure real funds.
+
 ## Run it locally
 
 ```bash
 npm install
 npm run dev
 ```
-
-Tests: `npm test` for the unit suite, `npm run test:e2e` for the Playwright suite. Deployment notes live in [docs/DEPLOY.md](docs/DEPLOY.md).
 
 ## Credits
 

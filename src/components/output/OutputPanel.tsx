@@ -55,11 +55,19 @@ export function OutputPanel() {
           title="Bitcoin script"
           hint="ASM opcodes"
           copyText={ok && result.asm ? result.asm : ''}
-          placeholder={placeholderFor(compile.status)}
+          placeholder={
+            ok && !result.asm
+              ? 'script display unavailable in this context'
+              : placeholderFor(compile.status)
+          }
         >
           {ok && result.asm ? <Colorized tokens={asmTokens} keys={keys} /> : null}
         </CodeBlock>
       </div>
+      <p className="output-disclaimer">
+        Educational tool: keys are aliases, not real keys. Design and learn here, secure real funds
+        with actual wallet software.
+      </p>
     </section>
   )
 }
@@ -109,6 +117,14 @@ function StatusStrip() {
                 title="A spending path mixes block-based and time-based locks"
               >
                 timelock mix
+              </span>
+            )}
+            {result.analysis?.hasDuplicateKeys && (
+              <span
+                className="status-badge is-warn"
+                title="The same key appears in several places of the script"
+              >
+                duplicate keys
               </span>
             )}
           </>

@@ -1,8 +1,9 @@
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { TYPE_COLORS, TYPE_LABELS } from '../../core/colors'
 import type { NodeType } from '../../core/policy'
 import { useDismissable } from '../../hooks/useDismissable'
 import { useStore } from '../../state/store'
+import { focusFirstMenuItem, handleMenuKeys } from '../a11y'
 import { IconPlus, TYPE_ICONS } from '../icons'
 
 const ADDABLE: NodeType[] = ['key', 'and', 'or', 'thresh', 'after', 'older', 'hash']
@@ -16,9 +17,14 @@ export function AddConditionMenu({
 }) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
   const addChildNode = useStore((s) => s.addChildNode)
   const close = useCallback(() => setOpen(false), [])
   useDismissable(open, ref, close)
+
+  useEffect(() => {
+    if (open) focusFirstMenuItem(menuRef.current)
+  }, [open])
 
   return (
     <div className="add-condition" ref={ref}>
@@ -37,7 +43,13 @@ export function AddConditionMenu({
         {parentType === 'thresh' && <span className="add-condition-hint">n + 1</span>}
       </button>
       {open && (
-        <div className="menu menu-up" role="menu" aria-label="Condition type">
+        <div
+          className="menu menu-up"
+          role="menu"
+          aria-label="Condition type"
+          ref={menuRef}
+          onKeyDown={handleMenuKeys}
+        >
           {ADDABLE.map((type) => {
             const TypeIcon = TYPE_ICONS[type]
             return (

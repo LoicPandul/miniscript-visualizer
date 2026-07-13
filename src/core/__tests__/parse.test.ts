@@ -47,6 +47,10 @@ describe('parsePolicy', () => {
     expect(() => parsePolicy('and(9@pk(Alice),pk(Bob))')).toThrow(PolicyParseError)
   })
 
+  it('rejects zero weights', () => {
+    expect(() => parsePolicy('or(0@pk(Alice),pk(Bob))')).toThrow(PolicyParseError)
+  })
+
   it('rejects trailing garbage', () => {
     expect(() => parsePolicy('pk(Alice))')).toThrow(PolicyParseError)
   })

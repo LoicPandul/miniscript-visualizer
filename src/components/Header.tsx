@@ -1,8 +1,9 @@
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { EXAMPLES } from '../core/examples'
 import type { ScriptContext } from '../core/policy'
 import { useDismissable } from '../hooks/useDismissable'
 import { useStore } from '../state/store'
+import { focusFirstMenuItem, handleMenuKeys, handleRadioGroupKeys } from './a11y'
 import { IconChevronDown, IconGitHub, IconImport, IconReset } from './icons'
 import { ImportDialog } from './ImportDialog'
 
@@ -33,13 +34,19 @@ export function Header() {
       </div>
 
       <div className="header-tools">
-        <div className="segmented" role="radiogroup" aria-label="Script context">
+        <div
+          className="segmented"
+          role="radiogroup"
+          aria-label="Script context"
+          onKeyDown={handleRadioGroupKeys}
+        >
           {CONTEXTS.map((c) => (
             <button
               key={c.value}
               type="button"
               role="radio"
               aria-checked={context === c.value}
+              tabIndex={context === c.value ? 0 : -1}
               className={`segmented-item${context === c.value ? ' is-active' : ''}`}
               title={c.hint}
               onClick={() => setContext(c.value)}
@@ -91,9 +98,14 @@ export function Header() {
 function ExamplesMenu() {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
   const loadExample = useStore((s) => s.loadExample)
   const close = useCallback(() => setOpen(false), [])
   useDismissable(open, ref, close)
+
+  useEffect(() => {
+    if (open) focusFirstMenuItem(menuRef.current)
+  }, [open])
 
   return (
     <div className="menu-anchor" ref={ref}>
@@ -108,7 +120,13 @@ function ExamplesMenu() {
         <IconChevronDown size={14} className={`chevron${open ? ' is-open' : ''}`} />
       </button>
       {open && (
-        <div className="menu" role="menu" aria-label="Example policies">
+        <div
+          className="menu"
+          role="menu"
+          aria-label="Example policies"
+          ref={menuRef}
+          onKeyDown={handleMenuKeys}
+        >
           {EXAMPLES.map((example) => (
             <button
               key={example.id}

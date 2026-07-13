@@ -31,7 +31,10 @@ export function useCompilePipeline(): void {
 
     const policy = serializePolicy(root, lookup)
     let cancelled = false
-    setCompile({ status: 'loading', result: null, issues })
+    // Keep the previous successful result visible while recompiling, so the
+    // output blocks don't flicker on every edit.
+    const previous = useStore.getState().compile.result
+    setCompile({ status: 'loading', result: previous?.ok ? previous : null, issues })
 
     const timer = setTimeout(() => {
       compile(policy, context)

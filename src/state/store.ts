@@ -11,7 +11,7 @@ import type {
   PolicyNode,
   ScriptContext,
 } from '../core/policy'
-import { collectKeyIds, nextId } from '../core/policy'
+import { collectKeyIds, nextId, walk } from '../core/policy'
 import { parsePolicy } from '../core/parse'
 import type { PolicyIssue } from '../core/validate'
 import type { CompileResult } from '../lib/compiler'
@@ -112,10 +112,27 @@ export const useStore = create<VisualizerState>()(
         }
       }
 
-      /** Drops participants no longer referenced anywhere in the tree. */
-      const pruneKeys = (root: PolicyNode, keys: KeyParticipant[]): KeyParticipant[] => {
-        const used = collectKeyIds(root)
-        return keys.filter((k) => used.has(k.id))
+      /**
+       * After a structural change, drops diagram positions of nodes that no
+       * longer exist and clears a selection that points at nothing.
+       * Participants are intentionally NOT pruned: unused keys stay in the
+       * registry (shown dimmed) until the user removes them.
+       */
+      const afterStructuralChange = (root: PolicyNode) => {
+        const s = get()
+        const alive = new Set<string>()
+        walk(root, (n) => alive.add(n.id))
+        const overrides: Record<string, { x: number; y: number }> = {}
+        for (const [id, pos] of Object.entries(s.positionOverrides)) {
+          if (alive.has(id)) overrides[id] = pos
+        }
+        const keepSelection =
+          s.selectedNodeId !== null &&
+          (alive.has(s.selectedNodeId) || s.annotations.some((a) => a.id === s.selectedNodeId))
+        return {
+          positionOverrides: overrides,
+          selectedNodeId: keepSelection ? s.selectedNodeId : null,
+        }
       }
 
       const start = initialPolicy()
@@ -136,7 +153,7 @@ export const useStore = create<VisualizerState>()(
 
         transformNodeType: (id, type) => {
           const root = transformNode(get().root, id, type, newOpsCtx())
-          set({ root, keys: pruneKeys(root, get().keys) })
+          set({ root, ...afterStructuralChange(root) })
         },
 
         addChildNode: (parentId, type) => {
@@ -144,16 +161,11 @@ export const useStore = create<VisualizerState>()(
           set({ root })
         },
 
-        removeNode: (id) =>
-          set((s) => {
-            const root = removeNodeById(s.root, id)
-            if (!root) return s
-            return {
-              root,
-              keys: pruneKeys(root, s.keys),
-              selectedNodeId: s.selectedNodeId === id ? null : s.selectedNodeId,
-            }
-          }),
+        removeNode: (id) => {
+          const root = removeNodeById(get().root, id)
+          if (!root) return
+          set({ root, ...afterStructuralChange(root) })
+        },
 
         setThreshK: (id, k) =>
           set((s) => ({
@@ -180,12 +192,11 @@ export const useStore = create<VisualizerState>()(
           })),
 
         assignKey: (nodeId, keyId) =>
-          set((s) => {
-            const root = updateNodeById(s.root, nodeId, (n) =>
+          set((s) => ({
+            root: updateNodeById(s.root, nodeId, (n) =>
               n.type === 'key' ? { ...n, keyId } : n,
-            )
-            return { root, keys: pruneKeys(root, s.keys) }
-          }),
+            ),
+          })),
 
         addParticipant: () => {
           const { keys, nextColorIndex } = get()

@@ -177,6 +177,24 @@ test('selection syncs from diagram to builder and code', async ({ page }, testIn
   await expect(page.locator('.tok-selected').first()).toBeVisible()
 })
 
+test('clicking another node moves the selection in one click', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name === 'mobile', 'panels are tabbed on mobile')
+  // Select a deep node first, then its ancestor: the batch of select/deselect
+  // changes must not cancel itself out (regression test).
+  await page.locator('.flow-node', { hasText: 'Heir' }).click()
+  await page.locator('.flow-node', { hasText: 'OR' }).click()
+  await expect(page.locator('.node-card.is-selected')).toHaveCount(1)
+  await expect(page.locator('.node-card.is-selected .node-type-select').first()).toHaveValue('or')
+})
+
+test('the root node cannot be deleted from the canvas', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name === 'mobile', 'keyboard delete is desktop-focused')
+  const count = await page.locator('.flow-node').count()
+  await page.locator('.flow-node', { hasText: 'OR' }).click()
+  await page.keyboard.press('Delete')
+  await expect(page.locator('.flow-node')).toHaveCount(count)
+})
+
 test('mobile: tabs switch between panels', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'mobile', 'mobile only')
   await expect(page.locator('.builder')).toBeInViewport()

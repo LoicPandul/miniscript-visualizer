@@ -97,10 +97,13 @@ export const MAX_SEQUENCE_VALUE = 0xffff // 16-bit lock field
 
 let counter = 0
 
-/** Monotonic unique id — stable enough for a single session, serializes fine. */
+/** Per-load entropy so ids never collide with state rehydrated from storage. */
+const SESSION = Math.random().toString(36).slice(2, 8)
+
+/** Monotonic unique id — unique within a session and across persisted sessions. */
 export function nextId(prefix = 'n'): string {
   counter += 1
-  return `${prefix}_${counter.toString(36)}${Date.now().toString(36).slice(-4)}`
+  return `${prefix}_${counter.toString(36)}${SESSION}`
 }
 
 export function isBranch(node: PolicyNode): node is BranchNode {

@@ -42,6 +42,31 @@ describe('validatePolicy', () => {
     expect(issues.some((i) => i.level === 'warning')).toBe(true)
   })
 
+  it('warns when a threshold can be met without any key', () => {
+    const root: PolicyNode = {
+      id: 't',
+      type: 'thresh',
+      k: 2,
+      children: [
+        key('p1'),
+        { id: 'af', type: 'after', value: 900_000 },
+        { id: 'ol', type: 'older', value: 144 },
+      ],
+    }
+    const issues = validatePolicy(root, lookup)
+    expect(issues.some((i) => i.level === 'warning')).toBe(true)
+  })
+
+  it('does not warn when the threshold requires at least one key', () => {
+    const root: PolicyNode = {
+      id: 't',
+      type: 'thresh',
+      k: 2,
+      children: [key('p1'), key('p2'), { id: 'ol', type: 'older', value: 144 }],
+    }
+    expect(validatePolicy(root, lookup)).toEqual([])
+  })
+
   it('warns on duplicate keys under the same branch', () => {
     const root: PolicyNode = { id: 'a', type: 'and', children: [key('p1'), key('p1')] }
     const issues = validatePolicy(root, lookup)
@@ -67,5 +92,12 @@ describe('isValidAlias', () => {
     expect(isValidAlias('')).toBe(false)
     expect(isValidAlias('a'.repeat(17))).toBe(true)
     expect(isValidAlias('a'.repeat(18))).toBe(false)
+  })
+
+  it('rejects script keywords as aliases', () => {
+    expect(isValidAlias('older')).toBe(false)
+    expect(isValidAlias('sha256')).toBe(false)
+    expect(isValidAlias('Multi')).toBe(false)
+    expect(isValidAlias('Olders')).toBe(true)
   })
 })

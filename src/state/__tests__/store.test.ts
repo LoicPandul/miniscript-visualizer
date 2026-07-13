@@ -34,7 +34,7 @@ describe('store operations', () => {
     expect(new Set(keyIds).size).toBe(3)
   })
 
-  it('removing a node prunes participants that are no longer used', () => {
+  it('removing a node keeps unused participants available in the registry', () => {
     const { root, transformNodeType } = useStore.getState()
     transformNodeType(root.id, 'or')
     const orRoot = useStore.getState().root
@@ -43,8 +43,31 @@ describe('store operations', () => {
 
     useStore.getState().removeNode(second.id)
     const state = useStore.getState()
-    expect(state.keys).toHaveLength(1)
+    // The tree uses one key, but the freed participant stays (dimmed in UI).
     expect(collectKeyIds(state.root).size).toBe(1)
+    expect(state.keys).toHaveLength(2)
+  })
+
+  it('structural changes drop diagram positions of removed nodes', () => {
+    const { root, transformNodeType } = useStore.getState()
+    transformNodeType(root.id, 'or')
+    const orRoot = useStore.getState().root
+    if (!isBranch(orRoot)) return
+    const second = orRoot.children[1]
+
+    useStore.getState().setNodePosition(second.id, 10, 20)
+    useStore.getState().selectNode(second.id)
+    useStore.getState().removeNode(second.id)
+
+    const state = useStore.getState()
+    expect(state.positionOverrides[second.id]).toBeUndefined()
+    expect(state.selectedNodeId).toBeNull()
+  })
+
+  it('refuses to remove the root', () => {
+    const { root } = useStore.getState()
+    useStore.getState().removeNode(root.id)
+    expect(useStore.getState().root.id).toBe(root.id)
   })
 
   it('resetPolicy returns to a single fresh key', () => {

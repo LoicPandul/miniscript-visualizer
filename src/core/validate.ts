@@ -15,8 +15,19 @@ const ALIAS_PATTERN = /^[A-Za-z][A-Za-z0-9_]*$/
 /** The policy compiler rejects key identifiers longer than 17 characters. */
 export const MAX_ALIAS_LENGTH = 17
 
+/** Language fragment names — an alias shadowing them would be ambiguous. */
+const RESERVED_ALIASES = new Set([
+  'pk', 'pkh', 'pk_k', 'pk_h', 'and', 'or', 'andor', 'thresh', 'multi', 'multi_a',
+  'after', 'older', 'sha256', 'hash256', 'ripemd160', 'hash160', 'sh', 'wsh', 'tr',
+  'and_v', 'and_b', 'and_n', 'or_b', 'or_c', 'or_d', 'or_i',
+])
+
 export function isValidAlias(alias: string): boolean {
-  return ALIAS_PATTERN.test(alias) && alias.length <= MAX_ALIAS_LENGTH
+  return (
+    ALIAS_PATTERN.test(alias) &&
+    alias.length <= MAX_ALIAS_LENGTH &&
+    !RESERVED_ALIASES.has(alias.toLowerCase())
+  )
 }
 
 const DIGEST_LENGTH: Record<string, number> = {
@@ -56,7 +67,7 @@ export function validatePolicy(
           issues.push({
             level: 'error',
             nodeId: node.id,
-            message: `Key name "${participant.alias}" must start with a letter, use only letters, digits or underscores, and stay under ${MAX_ALIAS_LENGTH + 1} characters.`,
+            message: `Key name "${participant.alias}" must start with a letter, use only letters, digits or underscores, stay under ${MAX_ALIAS_LENGTH + 1} characters, and not be a script keyword.`,
           })
         }
         break
@@ -101,6 +112,13 @@ export function validatePolicy(
             level: 'error',
             nodeId: node.id,
             message: `Threshold must satisfy 1 ≤ k ≤ ${n} (currently k = ${node.k}).`,
+          })
+        } else if (node.children.filter(isSignatureLess).length >= node.k) {
+          issues.push({
+            level: 'warning',
+            nodeId: node.id,
+            message:
+              'This threshold can be met without any key: anyone could spend once the conditions allow it.',
           })
         }
         break

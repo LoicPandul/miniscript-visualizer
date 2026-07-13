@@ -2,6 +2,18 @@
 
 Working notes on where the project stands. Newest first.
 
+## 2026-07-13 — Review pass, accessibility, hardening
+
+Dedicated review of the whole codebase, findings fixed:
+
+- Canvas: batch-resolved selection changes (a stale closure could cancel a fresh selection), root node can no longer be deleted from the diagram, PNG export capped under Safari canvas limits with a failure message.
+- Store: participants are no longer silently pruned by unrelated tree edits (unused keys stay, dimmed, removable by hand); diagram positions and selection are cleaned up when nodes disappear; ids carry per-session entropy so persisted state can never collide.
+- Compile pipeline: previous output stays visible while recompiling (no flicker), compiler load failures surface an error instead of an endless spinner.
+- Validation: thresholds satisfiable without any key now warn; script keywords are rejected as key aliases; the parser rejects zero weights.
+- Accessibility: WCAG 2.1 AA clean (axe, desktop + mobile), focus trap + focus restore in the import dialog, arrow-key navigation on radio groups and menus, roving tabindex.
+- UI: educational disclaimer under the outputs, `duplicate keys` badge, custom logo + favicon.
+- Suite now at 73 unit tests + 29 e2e (fresh production build each run).
+
 ## 2026-07-13 — Full UI, diagram, outputs, e2e suite
 
 - Zustand store (localStorage persistence) + always-valid tree operations; fixed a spare-participant reuse bug (transform key→thresh now creates distinct keys).
