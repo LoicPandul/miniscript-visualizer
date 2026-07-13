@@ -982,6 +982,12 @@
   border: 1px solid var(--hairline);
   border-radius: var(--radius-sm);
   overflow: hidden;
+  opacity: 0.75;
+  transition: opacity var(--dur-fast) var(--ease-out);
+}
+
+.canvas-minimap:hover {
+  opacity: 1;
 }
 
 .canvas .react-flow__edge.selected .react-flow__edge-path {

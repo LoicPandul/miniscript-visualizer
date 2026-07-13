@@ -19,7 +19,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { participantColor, TYPE_COLORS } from '../../core/colors'
 import type { KeyParticipant, PolicyNode } from '../../core/policy'
 import { countNodes, isBranch, LOCKTIME_THRESHOLD, walk } from '../../core/policy'
-import { describeOlder } from '../../core/timelocks'
+import { approxDuration, olderMode, olderUnits } from '../../core/timelocks'
 import { layoutTree } from '../../lib/layout'
 import { useStore } from '../../state/store'
 import { IconDownload, IconFit, IconLayout, IconNote } from '../icons'
@@ -169,6 +169,7 @@ function Canvas() {
         <MiniMap
           className="canvas-minimap"
           position="bottom-left"
+          style={{ width: 150, height: 100 }}
           pannable
           zoomable
           nodeColor={(node) => ((node.data as PolicyNodeData)?.color as string) ?? '#4a5570'}
@@ -301,8 +302,13 @@ function describeNode(node: PolicyNode, keys: KeyParticipant[], isRoot: boolean)
           : `block ${node.value.toLocaleString('en-US')}`
       return { ...base, title: 'AFTER', subtitle }
     }
-    case 'older':
-      return { ...base, title: 'OLDER', subtitle: describeOlder(node.value) }
+    case 'older': {
+      const subtitle =
+        olderMode(node.value) === 'time'
+          ? `${olderUnits(node.value)} × 512s ≈ ${approxDuration(olderUnits(node.value) * 512)}`
+          : `${node.value.toLocaleString('en-US')} blocks ≈ ${approxDuration(node.value * 600)}`
+      return { ...base, title: 'OLDER', subtitle }
+    }
     case 'hash':
       return { ...base, title: 'HASH', subtitle: `${node.algo} · ${node.digest.slice(0, 8)}…` }
   }
