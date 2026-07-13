@@ -13,7 +13,7 @@ export function ParticipantsBar() {
   const usedIds = collectKeyIds(root)
 
   return (
-    <div className="participants" role="list" aria-label="Key participants">
+    <div className="participants" role="group" aria-label="Key participants">
       {keys.map((key) => (
         <ParticipantChip
           key={key.id}
@@ -66,7 +66,6 @@ function ParticipantChip({
   return (
     <span
       className={`participant${used ? '' : ' is-unused'}`}
-      role="listitem"
       style={{ '--participant-color': color } as React.CSSProperties}
     >
       <span className="participant-dot" aria-hidden="true" />

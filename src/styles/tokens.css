@@ -16,11 +16,11 @@
   --hairline: rgba(154, 170, 207, 0.14);
   --hairline-strong: rgba(154, 170, 207, 0.26);
 
-  /* Text */
+  /* Text (all levels hold ≥ 4.5:1 on the raised surfaces) */
   --text: #e8edf7;
   --text-secondary: #a7b2cc;
-  --text-muted: #6d7a99;
-  --text-faint: #4a5570;
+  --text-muted: #8b98b8;
+  --text-faint: #77839f;
 
   /* Brand */
   --accent: #f7c948;
