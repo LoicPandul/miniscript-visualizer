@@ -234,6 +234,9 @@ function CanvasToolbar() {
         backgroundColor: themeBg,
         width: width * scale,
         height: height * scale,
+        // Our own `scale` sets the resolution; the device pixel ratio must
+        // not multiply it again or the credit compositing below crops.
+        pixelRatio: 1,
         style: {
           width: `${width}px`,
           height: `${height}px`,
