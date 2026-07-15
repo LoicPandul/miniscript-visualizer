@@ -4,7 +4,7 @@ import type { ScriptContext } from '../core/policy'
 import { useDismissable } from '../hooks/useDismissable'
 import { useStore } from '../state/store'
 import { focusFirstMenuItem, handleMenuKeys, handleRadioGroupKeys } from './a11y'
-import { IconChevronDown, IconGitHub, IconImport, IconReset } from './icons'
+import { IconChevronDown, IconGitHub, IconImport, IconMoon, IconReset, IconSun } from './icons'
 import { ImportDialog } from './ImportDialog'
 
 const REPO_URL = 'https://github.com/LoicPandul/miniscript-visualizer'
@@ -78,6 +78,8 @@ export function Header() {
           <span className="btn-label-wide">New</span>
         </button>
 
+        <ThemeToggle />
+
         <a
           className="btn btn-icon"
           href={REPO_URL}
@@ -92,6 +94,40 @@ export function Header() {
 
       <ImportDialog open={importOpen} onClose={() => setImportOpen(false)} />
     </header>
+  )
+}
+
+type Theme = 'light' | 'dark'
+
+function initialTheme(): Theme {
+  const saved = localStorage.getItem('msv-theme')
+  if (saved === 'light' || saved === 'dark') return saved
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+}
+
+function ThemeToggle() {
+  const [theme, setTheme] = useState<Theme>(initialTheme)
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme
+    localStorage.setItem('msv-theme', theme)
+  }, [theme])
+
+  const next = theme === 'light' ? 'dark' : 'light'
+
+  return (
+    <button
+      type="button"
+      className="btn btn-icon theme-toggle"
+      onClick={() => setTheme(next)}
+      aria-label={`Switch to the ${next} theme`}
+      title={`Switch to the ${next} theme`}
+    >
+      <span className="theme-toggle-stack" aria-hidden="true">
+        <IconSun size={16} className="theme-icon theme-icon-sun" />
+        <IconMoon size={15} className="theme-icon theme-icon-moon" />
+      </span>
+    </button>
   )
 }
 

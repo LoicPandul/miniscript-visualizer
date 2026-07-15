@@ -72,23 +72,6 @@ export const EXAMPLES: PolicyExample[] = [
     },
   },
   {
-    id: 'multisig-3of5',
-    name: '3-of-5 multisig',
-    description: 'Any 3 signatures out of 5 keys can spend.',
-    build: () => {
-      const b = new ExampleBuilder()
-      const root = b.thresh(
-        3,
-        b.key('Alice'),
-        b.key('Bob'),
-        b.key('Carol'),
-        b.key('Dave'),
-        b.key('Erin'),
-      )
-      return { root, keys: b.keys }
-    },
-  },
-  {
     id: 'inheritance',
     name: 'Inheritance',
     description: 'The owner spends anytime; an heir can recover the coins after ~6 months of inactivity.',

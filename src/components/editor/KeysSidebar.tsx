@@ -1,20 +1,19 @@
-import { Panel } from '@xyflow/react'
 import { IconInfo } from '../icons'
-import { ParticipantsBar } from '../editor/ParticipantsBar'
+import { ParticipantsBar } from './ParticipantsBar'
 
-/** Floating key registry, top-left of the diagram. */
-export function KeysPanel() {
+/** Slim key registry column, left of the diagram. */
+export function KeysSidebar() {
   return (
-    <Panel position="top-left" className="keys-panel nopan nowheel">
+    <aside className="keys-sidebar" aria-label="Key participants">
       <h2 className="section-label">Keys</h2>
       <ParticipantsBar />
-      <p className="keys-panel-disclaimer">
+      <p className="keys-sidebar-disclaimer">
         <IconInfo size={13} />
         <span>
           Educational tool: keys are simple aliases. Design and learn here, secure real funds with
           actual wallet software.
         </span>
       </p>
-    </Panel>
+    </aside>
   )
 }

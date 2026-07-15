@@ -1,4 +1,5 @@
-/* Design tokens — single light theme, committed. Warm paper, ink text. */
+/* Design tokens — light (warm paper) and dark (deep ink) themes.
+   The active theme is set as data-theme on <html>. */
 
 :root {
   color-scheme: light;
@@ -7,7 +8,7 @@
   --bg: #f2f1ec;
   --bg-panel: #f8f7f4;
   --bg-raised: #ffffff;
-  --bg-canvas: #edecE6;
+  --bg-canvas: #edece6;
   --bg-overlay: rgba(255, 255, 255, 0.86);
   --bg-input: #f4f3ef;
   --bg-hover: rgba(31, 37, 61, 0.05);
@@ -51,6 +52,13 @@
   --p-6: #0d9488;
   --p-7: #92703a;
 
+  /* Dots on the diagram background */
+  --canvas-dot: rgba(31, 37, 61, 0.16);
+
+  /* Details */
+  --scrollbar-thumb: rgba(31, 37, 61, 0.22);
+  --selection-bg: rgba(247, 201, 72, 0.45);
+
   /* Typography */
   --font-ui: 'Instrument Sans Variable', system-ui, -apple-system, sans-serif;
   --font-mono: 'Spline Sans Mono Variable', ui-monospace, 'Cascadia Mono', monospace;
@@ -76,4 +84,59 @@
   --z-header: 20;
   --z-menu: 30;
   --z-modal: 50;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --bg: #0b0e16;
+  --bg-panel: #0f131e;
+  --bg-raised: #171c2a;
+  --bg-canvas: #0d1119;
+  --bg-overlay: rgba(19, 24, 37, 0.85);
+  --bg-input: #121724;
+  --bg-hover: rgba(164, 180, 214, 0.07);
+  --bg-active: rgba(164, 180, 214, 0.13);
+
+  --hairline: rgba(164, 180, 214, 0.15);
+  --hairline-strong: rgba(164, 180, 214, 0.28);
+
+  --text: #e9edf6;
+  --text-secondary: #b3bdd4;
+  --text-muted: #8e99b4;
+  --text-faint: #7d88a3;
+
+  --accent: #f2c14e;
+  --accent-strong: #ffd75e;
+  --accent-fill: #f7c948;
+  --accent-ink: #201a05;
+  --danger: #ff7070;
+  --warning: #ffb35c;
+  --ok: #43d492;
+
+  --c-key: #f5c445;
+  --c-and: #63a2ff;
+  --c-or: #f472b6;
+  --c-thresh: #ab8dfc;
+  --c-after: #3fd394;
+  --c-older: #3fc8dc;
+  --c-hash: #ffa14e;
+
+  --p-0: #f5c445;
+  --p-1: #ff8168;
+  --p-2: #63c1ff;
+  --p-3: #a9dc48;
+  --p-4: #d29aff;
+  --p-5: #ff93c9;
+  --p-6: #4fd8c4;
+  --p-7: #d9b991;
+
+  --canvas-dot: rgba(164, 180, 214, 0.14);
+
+  --scrollbar-thumb: rgba(164, 180, 214, 0.25);
+  --selection-bg: rgba(247, 201, 72, 0.3);
+
+  --shadow-panel: 0 1px 0 rgba(255, 255, 255, 0.03) inset, 0 8px 24px rgba(2, 4, 10, 0.4);
+  --shadow-pop: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 18px 48px rgba(2, 4, 10, 0.6);
+  --shadow-node: 0 2px 12px rgba(2, 4, 10, 0.45);
 }

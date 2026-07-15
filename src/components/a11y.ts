@@ -18,10 +18,14 @@ export function handleRadioGroupKeys(e: KeyboardEvent<HTMLElement>): void {
   radios[next].click()
 }
 
-/** Arrow/Home/End navigation between role="menuitem" children. */
+const MENU_ITEMS = '[role="menuitem"], [role="menuitemradio"]'
+
+/** Arrow/Home/End navigation between menu item children. */
 export function handleMenuKeys(e: KeyboardEvent<HTMLElement>): void {
   if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(e.key)) return
-  const items = Array.from(e.currentTarget.querySelectorAll<HTMLButtonElement>('[role="menuitem"]'))
+  const items = Array.from(
+    e.currentTarget.querySelectorAll<HTMLButtonElement>(MENU_ITEMS),
+  ).filter((el) => !el.disabled)
   if (items.length === 0) return
   const active = items.indexOf(document.activeElement as HTMLButtonElement)
   let next = 0
@@ -32,9 +36,12 @@ export function handleMenuKeys(e: KeyboardEvent<HTMLElement>): void {
   items[next].focus()
 }
 
-/** Focuses the first menuitem of a just-opened menu. */
+/** Focuses the first (or checked) item of a just-opened menu. */
 export function focusFirstMenuItem(menu: HTMLElement | null): void {
   requestAnimationFrame(() => {
-    menu?.querySelector<HTMLButtonElement>('[role="menuitem"]')?.focus()
+    if (!menu) return
+    const checked = menu.querySelector<HTMLButtonElement>('[role="menuitemradio"][aria-checked="true"]')
+    const first = menu.querySelector<HTMLButtonElement>(MENU_ITEMS)
+    ;(checked ?? first)?.focus()
   })
 }

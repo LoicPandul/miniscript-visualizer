@@ -2,16 +2,17 @@ import type { NodeType } from './policy'
 
 /**
  * One specific color per condition type — used consistently across the
- * builder, the diagram and the colorized code output.
+ * diagram, the inspector and the colorized code output. Values are CSS
+ * custom properties so both themes resolve them (see styles/tokens.css).
  */
 export const TYPE_COLORS: Record<NodeType, string> = {
-  key: '#a87908',
-  and: '#2563eb',
-  or: '#db2777',
-  thresh: '#7c3aed',
-  after: '#059669',
-  older: '#0891b2',
-  hash: '#d97706',
+  key: 'var(--c-key)',
+  and: 'var(--c-and)',
+  or: 'var(--c-or)',
+  thresh: 'var(--c-thresh)',
+  after: 'var(--c-after)',
+  older: 'var(--c-older)',
+  hash: 'var(--c-hash)',
 }
 
 export const TYPE_LABELS: Record<NodeType, string> = {
@@ -30,14 +31,14 @@ export const TYPE_LABELS: Record<NodeType, string> = {
  * are always labeled with their alias.
  */
 export const PARTICIPANT_COLORS = [
-  '#a87908', // gold
-  '#dc4b28', // coral
-  '#0284c7', // sky
-  '#65a30d', // lime
-  '#9333ea', // orchid
-  '#be3d78', // rose
-  '#0d9488', // teal
-  '#92703a', // sand
+  'var(--p-0)',
+  'var(--p-1)',
+  'var(--p-2)',
+  'var(--p-3)',
+  'var(--p-4)',
+  'var(--p-5)',
+  'var(--p-6)',
+  'var(--p-7)',
 ]
 
 export function participantColor(colorIndex: number): string {

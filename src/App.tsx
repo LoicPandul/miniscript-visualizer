@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Header } from './components/Header'
 import { CanvasPanel } from './components/canvas/CanvasPanel'
+import { KeysSidebar } from './components/editor/KeysSidebar'
 import { OutputPanel } from './components/output/OutputPanel'
 import { IconCode, IconFit } from './components/icons'
 import { useCompilePipeline } from './hooks/useCompilePipeline'
@@ -20,8 +21,11 @@ export default function App() {
     <div className="app" data-tab={tab}>
       <Header />
       <main className="layout">
-        <div className="canvas-panel">
-          <CanvasPanel />
+        <div className="diagram-pane">
+          <KeysSidebar />
+          <div className="canvas-panel">
+            <CanvasPanel />
+          </div>
         </div>
         <OutputPanel />
       </main>

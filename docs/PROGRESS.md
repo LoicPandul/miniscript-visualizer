@@ -2,6 +2,18 @@
 
 Working notes on where the project stands. Newest first.
 
+## 2026-07-14 — Dark mode, keys column, compact outputs (user feedback pass 3)
+
+- Dark theme + animated sun/moon toggle in the header; all colors (nodes, edges, colorized code, PNG export) moved to CSS variables so both themes stay coherent. Theme persisted, respects prefers-color-scheme, applied before first paint.
+- Keys live in a slim left column again (desktop), out of the diagram; compact band above the canvas on mobile.
+- Output blocks compacted (~50% less height): one row of 4 on wide screens, scroll inside each block only.
+- Canvas dots are back; PNG export picks the active theme background and stamps a mono credit line to the site.
+- Native selects replaced by a custom dropdown (colored icons, checkmark, arrow-key navigation) — type, key and hash-algo pickers.
+- Threshold icon recentered; 3-of-5 example removed.
+- Examples deep-verified with the satisfier (spending paths proven): single key, 2-of-3, inheritance (owner anytime / heir after 26280 blocks), multisig+recovery (2-of-3 anytime / recovery after 52560), decaying (3 sigs now / 2 sigs + 12960 blocks). Permanent test file: examples-verify.test.ts.
+- Auto-pan clamped so the top of the tree never leaves the view. 84 unit + 31 e2e green.
+- Gotcha logged: always stop the local preview server before running e2e (reuseExistingServer can serve a stale build).
+
 ## 2026-07-14 — Canvas-centric editor (user feedback pass 2)
 
 - The left builder sidebar is gone: the tree IS the editor. Selecting a block opens an inspector card under it (type change, threshold stepper, timelock/hash/odds editors, add condition, delete).

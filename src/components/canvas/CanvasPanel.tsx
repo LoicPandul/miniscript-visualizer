@@ -1,5 +1,7 @@
 import {
   applyNodeChanges,
+  Background,
+  BackgroundVariant,
   Controls,
   getNodesBounds,
   getViewportForBounds,
@@ -20,7 +22,6 @@ import { approxDuration, olderMode, olderUnits } from '../../core/timelocks'
 import { layoutTree } from '../../lib/layout'
 import { useStore } from '../../state/store'
 import { IconDownload, IconFit, IconLayout } from '../icons'
-import { KeysPanel } from './KeysPanel'
 import { PolicyFlowNode } from './PolicyFlowNode'
 
 const nodeTypes = { policy: PolicyFlowNode }
@@ -153,7 +154,8 @@ function Canvas() {
   }, [structureSize, fitView])
 
   // The inspector opens below the selected block: glide the canvas up when
-  // the block sits too low for it to fit. Skipped mid-drag.
+  // the block sits too low for it to fit — but never push the top of the
+  // tree out of view. Skipped mid-drag.
   const nodesRef = useRef(nodes)
   nodesRef.current = nodes
   const { getViewport, setViewport } = useReactFlow()
@@ -165,12 +167,15 @@ function Canvas() {
     if (!pane) return
     const viewport = getViewport()
     const screenY = node.position.y * viewport.zoom + viewport.y
-    const room = pane.getBoundingClientRect().height - 340
-    if (screenY > room) {
-      void setViewport(
-        { ...viewport, y: viewport.y - (screenY - room) },
-        { duration: 250 },
-      )
+    const room = pane.getBoundingClientRect().height - 300
+    const needed = screenY - room
+    if (needed <= 0) return
+    const topMost =
+      Math.min(...nodesRef.current.map((n) => n.position.y)) * viewport.zoom + viewport.y
+    const allowed = Math.max(0, topMost - 12)
+    const shift = Math.min(needed, allowed)
+    if (shift > 0) {
+      void setViewport({ ...viewport, y: viewport.y - shift }, { duration: 250 })
     }
   }, [selectedNodeId, getViewport, setViewport])
 
@@ -190,8 +195,8 @@ function Canvas() {
         deleteKeyCode={['Delete', 'Backspace']}
         proOptions={{ hideAttribution: false }}
       >
+        <Background variant={BackgroundVariant.Dots} gap={26} size={1.6} color="var(--canvas-dot)" />
         <Controls showInteractive={false} position="bottom-right" />
-        <KeysPanel />
         <CanvasToolbar />
         {selectedNodeId === null && (
           <Panel position="bottom-center" className="canvas-hint">
@@ -222,8 +227,11 @@ function CanvasToolbar() {
       // Stay under common canvas size limits (Safari caps around 4096²).
       const scale = Math.min(2, 4096 / width, 4096 / height)
       const view = getViewportForBounds(bounds, width, height, 0.4, 2, 0.08)
+      const rootStyle = getComputedStyle(document.documentElement)
+      const themeBg = rootStyle.getPropertyValue('--bg-canvas').trim() || '#f2f1ec'
+      const creditColor = rootStyle.getPropertyValue('--text-muted').trim() || '#5d6780'
       const dataUrl = await toPng(viewport, {
-        backgroundColor: '#f2f1ec',
+        backgroundColor: themeBg,
         width: width * scale,
         height: height * scale,
         style: {
@@ -233,9 +241,29 @@ function CanvasToolbar() {
           transformOrigin: 'top left',
         },
       })
+
+      // Append a footer band with a credit to the site.
+      const image = new Image()
+      image.src = dataUrl
+      await image.decode()
+      const footer = Math.round(40 * scale)
+      const composed = document.createElement('canvas')
+      composed.width = width * scale
+      composed.height = height * scale + footer
+      const ctx = composed.getContext('2d')!
+      ctx.fillStyle = themeBg
+      ctx.fillRect(0, 0, composed.width, composed.height)
+      ctx.drawImage(image, 0, 0)
+      ctx.fillStyle = creditColor
+      ctx.font = `500 ${Math.round(12.5 * scale)}px 'Spline Sans Mono Variable', ui-monospace, monospace`
+      ctx.textBaseline = 'middle'
+      const credit = 'miniscript-visualizer.pandul.workers.dev'
+      const creditWidth = ctx.measureText(credit).width
+      ctx.fillText(credit, composed.width - creditWidth - 18 * scale, height * scale + footer / 2)
+
       const link = document.createElement('a')
       link.download = 'miniscript-policy.png'
-      link.href = dataUrl
+      link.href = composed.toDataURL('image/png')
       link.click()
     } catch {
       window.alert('The PNG export failed in this browser. Try zooming the diagram smaller first.')

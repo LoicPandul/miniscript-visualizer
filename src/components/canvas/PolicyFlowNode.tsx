@@ -5,6 +5,7 @@ import type { NodeType, PolicyNode } from '../../core/policy'
 import { isBranch } from '../../core/policy'
 import { useStore } from '../../state/store'
 import { AddConditionMenu } from '../editor/AddConditionMenu'
+import { Dropdown } from '../editor/Dropdown'
 import {
   AfterControl,
   HashControl,
@@ -80,6 +81,20 @@ function Inspector({ node, isRoot }: { node: PolicyNode; isRoot: boolean }) {
   const issues = useStore((s) => s.compile.issues)
   const ownIssues = issues.filter((i) => i.nodeId === node.id)
 
+  const typeOptions = TYPE_OPTIONS.map((type) => {
+    const TypeIcon = TYPE_ICONS[type]
+    return {
+      value: type,
+      label: TYPE_LABELS[type],
+      disabled: isRoot && ROOT_FORBIDDEN.has(type),
+      icon: (
+        <span style={{ color: TYPE_COLORS[type], display: 'inline-flex' }}>
+          <TypeIcon size={14} />
+        </span>
+      ),
+    }
+  })
+
   return (
     <div className="inspector">
       <div className="inspector-head">
@@ -93,21 +108,13 @@ function Inspector({ node, isRoot }: { node: PolicyNode; isRoot: boolean }) {
             return <TypeIcon size={13} />
           })()}
         </span>
-        <label className="visually-hidden" htmlFor={`type-${node.id}`}>
-          Condition type
-        </label>
-        <select
-          id={`type-${node.id}`}
-          className="node-type-select"
+        <Dropdown
+          className="dropdown-type"
           value={node.type}
-          onChange={(e) => transformNodeType(node.id, e.target.value as NodeType)}
-        >
-          {TYPE_OPTIONS.map((type) => (
-            <option key={type} value={type} disabled={isRoot && ROOT_FORBIDDEN.has(type)}>
-              {TYPE_LABELS[type]}
-            </option>
-          ))}
-        </select>
+          options={typeOptions}
+          onChange={(type) => transformNodeType(node.id, type as NodeType)}
+          ariaLabel="Condition type"
+        />
         {!isRoot && (
           <button
             type="button"

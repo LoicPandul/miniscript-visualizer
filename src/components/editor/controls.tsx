@@ -22,6 +22,7 @@ import {
 } from '../../core/timelocks'
 import { useStore } from '../../state/store'
 import { handleRadioGroupKeys } from '../a11y'
+import { Dropdown } from './Dropdown'
 import { IconDice, IconMinus, IconPlus } from '../icons'
 
 /* ---------- Key ---------- */
@@ -30,38 +31,39 @@ export function KeyControl({ node }: { node: KeyNode }) {
   const keys = useStore((s) => s.keys)
   const assignKey = useStore((s) => s.assignKey)
   const addParticipant = useStore((s) => s.addParticipant)
-  const participant = keys.find((k) => k.id === node.keyId)
+
+  const options = [
+    ...keys.map((k) => ({
+      value: k.id,
+      label: k.alias,
+      icon: (
+        <span className="key-dot" style={{ background: participantColor(k.colorIndex) }} />
+      ),
+    })),
+    {
+      value: '__new',
+      label: 'New key…',
+      icon: <IconPlus size={12} />,
+    },
+  ]
 
   return (
     <div className="node-body">
-      <span
-        className="key-dot"
-        style={{ background: participant ? participantColor(participant.colorIndex) : 'var(--text-faint)' }}
-        aria-hidden="true"
-      />
-      <label className="visually-hidden" htmlFor={`key-${node.id}`}>
-        Signing key
-      </label>
-      <select
-        id={`key-${node.id}`}
-        className="field field-select mono"
+      <Dropdown
+        className="dropdown-fill"
+        mono
         value={node.keyId}
-        onChange={(e) => {
-          if (e.target.value === '__new') {
+        options={options}
+        onChange={(value) => {
+          if (value === '__new') {
             const created = addParticipant()
             assignKey(node.id, created.id)
           } else {
-            assignKey(node.id, e.target.value)
+            assignKey(node.id, value)
           }
         }}
-      >
-        {keys.map((k) => (
-          <option key={k.id} value={k.id}>
-            {k.alias}
-          </option>
-        ))}
-        <option value="__new">+ New key…</option>
-      </select>
+        ariaLabel="Signing key"
+      />
     </div>
   )
 }
@@ -360,15 +362,15 @@ export function HashControl({ node }: { node: HashNode }) {
   return (
     <div className="node-body node-body-stack">
       <div className="hash-row">
-        <label className="visually-hidden" htmlFor={`algo-${node.id}`}>
-          Hash algorithm
-        </label>
-        <select
-          id={`algo-${node.id}`}
-          className="field field-select mono"
+        <Dropdown
+          className="dropdown-fill"
+          mono
           value={node.algo}
-          onChange={(e) => {
-            const algo = e.target.value as HashAlgo
+          options={(Object.keys(ALGO_LABELS) as HashAlgo[]).map((algo) => ({
+            value: algo,
+            label: ALGO_LABELS[algo],
+          }))}
+          onChange={(algo) => {
             // Digest length changes with the algorithm → regenerate.
             if (ALGO_BYTES[algo] !== ALGO_BYTES[node.algo]) {
               randomize(algo)
@@ -376,13 +378,8 @@ export function HashControl({ node }: { node: HashNode }) {
               setHash(node.id, algo, node.digest)
             }
           }}
-        >
-          {(Object.keys(ALGO_LABELS) as HashAlgo[]).map((algo) => (
-            <option key={algo} value={algo}>
-              {ALGO_LABELS[algo]}
-            </option>
-          ))}
-        </select>
+          ariaLabel="Hash algorithm"
+        />
         <button
           type="button"
           className="btn btn-icon"

@@ -62,13 +62,13 @@ code,
 }
 
 ::selection {
-  background: rgba(247, 201, 72, 0.45);
+  background: var(--selection-bg);
 }
 
 /* Slim, unobtrusive scrollbars */
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(31, 37, 61, 0.22) transparent;
+  scrollbar-color: var(--scrollbar-thumb) transparent;
 }
 
 *::-webkit-scrollbar {
@@ -77,7 +77,7 @@ code,
 }
 
 *::-webkit-scrollbar-thumb {
-  background: rgba(31, 37, 61, 0.22);
+  background: var(--scrollbar-thumb);
   border-radius: 99px;
 }
 
