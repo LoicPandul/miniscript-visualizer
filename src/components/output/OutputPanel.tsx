@@ -69,7 +69,7 @@ export function OutputPanel() {
 }
 
 function placeholderFor(status: 'loading' | 'ready' | 'error'): string {
-  return status === 'error' ? 'nothing to show — fix the policy first' : 'compiling…'
+  return status === 'error' ? 'nothing to show: fix the policy first' : 'compiling…'
 }
 
 /** Silent when everything is fine; only surfaces problems. */

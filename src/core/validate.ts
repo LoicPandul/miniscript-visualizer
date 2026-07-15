@@ -1,5 +1,5 @@
 import type { KeyParticipant, PolicyNode } from './policy'
-import { isBranch, isSignatureLess, walk } from './policy'
+import { isSignatureLess, walk } from './policy'
 import { isValidAfter, isValidOlder } from './timelocks'
 
 export type IssueLevel = 'error' | 'warning'
@@ -156,23 +156,27 @@ export function validatePolicy(
       }
     }
 
-    // Duplicate identical keys directly under the same branch: redundant.
-    if (isBranch(node)) {
-      const seen = new Set<string>()
-      for (const child of node.children) {
-        if (child.type !== 'key') continue
-        if (seen.has(child.keyId)) {
-          issues.push({
-            level: 'warning',
-            nodeId: node.id,
-            message: 'The same key appears twice under this condition.',
-          })
-          break
-        }
-        seen.add(child.keyId)
-      }
+  })
+
+  // The reference compiler refuses any key that appears more than once in
+  // the policy: its safety analysis assumes all keys are distinct. Real
+  // wallets reuse an owner across branches by deriving a different child key
+  // per branch, which we emulate with a distinct alias.
+  const occurrences = new Map<string, number>()
+  walk(root, (node) => {
+    if (node.type === 'key') {
+      occurrences.set(node.keyId, (occurrences.get(node.keyId) ?? 0) + 1)
     }
   })
+  for (const [keyId, count] of occurrences) {
+    if (count < 2) continue
+    const alias = lookup(keyId)?.alias ?? 'This key'
+    issues.push({
+      level: 'warning',
+      nodeId: null,
+      message: `${alias} is used ${count} times. The compiler rejects reused keys: give each occurrence its own key (for example ${alias}_2). Real wallets do this with a different derivation path per branch.`,
+    })
+  }
 
   return issues
 }

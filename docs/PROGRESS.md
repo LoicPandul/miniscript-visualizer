@@ -2,6 +2,16 @@
 
 Working notes on where the project stands. Newest first.
 
+## 2026-07-14 — Canvas-centric editor (user feedback pass 2)
+
+- The left builder sidebar is gone: the tree IS the editor. Selecting a block opens an inspector card under it (type change, threshold stepper, timelock/hash/odds editors, add condition, delete).
+- Tree back to vertical (root on top), tighter spacing; auto-pan reveals the inspector when a low block is selected.
+- Keys registry floats top-left on the canvas, with the educational disclaimer.
+- Mobile: 2 tabs (Diagram / Code).
+- Duplicate-key warning: the reference compiler rejects any key used twice in a policy (verified empirically); a warning now explains it and suggests the per-branch alias workaround (real wallets use one derivation path per branch).
+- Parser/e2e: suite rewritten for canvas editing, 73 unit + 31 e2e green.
+- README links to the live site (miniscript-visualizer.pandul.workers.dev). e2e/ and playwright config are local-only now (gitignored).
+
 ## 2026-07-13 — Light theme redesign (user feedback pass)
 
 - Single light theme: warm paper background, white cards, darkened type/participant palettes (WCAG AA kept).

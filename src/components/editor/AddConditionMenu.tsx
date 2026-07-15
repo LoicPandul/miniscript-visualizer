@@ -44,7 +44,7 @@ export function AddConditionMenu({
       </button>
       {open && (
         <div
-          className="menu menu-up"
+          className="menu menu-attach-left"
           role="menu"
           aria-label="Condition type"
           ref={menuRef}

@@ -20,6 +20,7 @@ import { approxDuration, olderMode, olderUnits } from '../../core/timelocks'
 import { layoutTree } from '../../lib/layout'
 import { useStore } from '../../state/store'
 import { IconDownload, IconFit, IconLayout } from '../icons'
+import { KeysPanel } from './KeysPanel'
 import { PolicyFlowNode } from './PolicyFlowNode'
 
 const nodeTypes = { policy: PolicyFlowNode }
@@ -151,6 +152,28 @@ function Canvas() {
     }
   }, [structureSize, fitView])
 
+  // The inspector opens below the selected block: glide the canvas up when
+  // the block sits too low for it to fit. Skipped mid-drag.
+  const nodesRef = useRef(nodes)
+  nodesRef.current = nodes
+  const { getViewport, setViewport } = useReactFlow()
+  useEffect(() => {
+    if (!selectedNodeId) return
+    const node = nodesRef.current.find((n) => n.id === selectedNodeId)
+    if (!node || node.dragging) return
+    const pane = document.querySelector('.react-flow__pane')
+    if (!pane) return
+    const viewport = getViewport()
+    const screenY = node.position.y * viewport.zoom + viewport.y
+    const room = pane.getBoundingClientRect().height - 340
+    if (screenY > room) {
+      void setViewport(
+        { ...viewport, y: viewport.y - (screenY - room) },
+        { duration: 250 },
+      )
+    }
+  }, [selectedNodeId, getViewport, setViewport])
+
   return (
     <div className="canvas" aria-label="Policy diagram">
       <ReactFlow
@@ -168,7 +191,13 @@ function Canvas() {
         proOptions={{ hideAttribution: false }}
       >
         <Controls showInteractive={false} position="bottom-right" />
+        <KeysPanel />
         <CanvasToolbar />
+        {selectedNodeId === null && (
+          <Panel position="bottom-center" className="canvas-hint">
+            Click a block to edit it
+          </Panel>
+        )}
       </ReactFlow>
     </div>
   )
@@ -249,6 +278,7 @@ function keyColor(node: PolicyNode & { type: 'key' }, keys: KeyParticipant[]): s
 
 function describeNode(node: PolicyNode, keys: KeyParticipant[], isRoot: boolean) {
   const base = {
+    policyNode: node,
     nodeType: node.type,
     color: TYPE_COLORS[node.type],
     hasChildren: isBranch(node) && node.children.length > 0,
