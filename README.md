@@ -1,7 +1,7 @@
 # Miniscript Visualizer
 
 > [!IMPORTANT]
-> This repository is no longer maintained. The Miniscript Visualizer has been rewritten in Rust and now lives in the Wizardsardine toolbox ([wizardsardine/toolbox](https://github.com/wizardsardine/toolbox)), where all future development happens. That repository is private for now and will be made public later.
+> This repository is no longer maintained. The Miniscript Visualizer has been rewritten in Rust and will be available on the Wizardsardine website, at [miniscript.wizardsardine.com](https://miniscript.wizardsardine.com), where all future development happens.
 
 → [miniscript-visualizer.pandul.workers.dev](https://miniscript-visualizer.pandul.workers.dev/)
 
