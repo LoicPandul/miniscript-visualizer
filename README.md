@@ -1,5 +1,8 @@
 # Miniscript Visualizer
 
+> [!IMPORTANT]
+> This repository is no longer maintained. The Miniscript Visualizer has been rewritten in Rust and now lives in the Wizardsardine toolbox ([wizardsardine/toolbox](https://github.com/wizardsardine/toolbox)), where all future development happens. That repository is private for now and will be made public later.
+
 → [miniscript-visualizer.pandul.workers.dev](https://miniscript-visualizer.pandul.workers.dev/)
 
 Design Bitcoin spending policies visually. You assemble conditions (keys, thresholds, timelocks, hash locks), the app draws the tree, and the policy, Miniscript, descriptor and raw script update live below. Each output is copiable in one click.
